@@ -1,9 +1,6 @@
-using System.Net;
-using FileFolderExplorer.Models;
 using FileFolderExplorer.Repositories.Interfaces;
 using FileFolderExplorer.Services;
 using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Moq;
 using File = FileFolderExplorer.Models.File;
