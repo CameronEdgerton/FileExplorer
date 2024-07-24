@@ -6,5 +6,6 @@ public interface IFolderRepository
 {
     Task<IEnumerable<Folder>> GetAllAsync();
     Task AddAsync(Folder folder);
-    Task<bool> FolderExists(Guid id);
+    Task<bool> FolderExistsById(Guid id);
+    Task<bool> AnyFolderExists();
 }

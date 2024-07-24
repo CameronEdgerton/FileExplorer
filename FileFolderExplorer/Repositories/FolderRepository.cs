@@ -17,8 +17,13 @@ public class FolderRepository(FileFolderExplorerContext dbContext) : IFolderRepo
         return await dbContext.Folders.ToListAsync();
     }
 
-    public async Task<bool> FolderExists(Guid id)
+    public async Task<bool> FolderExistsById(Guid id)
     {
         return await dbContext.Folders.AnyAsync(f => f.FolderId == id);
+    }
+
+    public async Task<bool> AnyFolderExists()
+    {
+        return await dbContext.Folders.AnyAsync();
     }
 }
