@@ -34,7 +34,7 @@ public class FolderServiceUnitTests
         // Assert
         folder.Should().NotBeNull();
         folder.Name.Should().Be(folderName);
-        folder.ParentId.Should().Be(parentId);
+        folder.ParentFolderId.Should().Be(parentId);
         _mockFolderRepository.Verify(repo => repo.AddAsync(It.IsAny<Folder>()), Times.Once);
     }
     
@@ -76,7 +76,7 @@ public class FolderServiceUnitTests
         // Assert
         folder.Should().NotBeNull();
         folder.Name.Should().Be(folderName);
-        folder.ParentId.Should().BeNull();
+        folder.ParentFolderId.Should().BeNull();
         _mockFolderRepository.Verify(repo => repo.AddAsync(It.IsAny<Folder>()), Times.Once);
     }
     

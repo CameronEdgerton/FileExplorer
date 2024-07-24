@@ -11,29 +11,20 @@ public class FileFolderExplorerContext(DbContextOptions<FileFolderExplorerContex
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
-        
-        // Define the primary keys for the entities
-        modelBuilder.Entity<Folder>()
-            .HasKey(f => f.FolderId)
-            .HasName("PrimaryKey_FolderId");
-        
         modelBuilder.Entity<File>()
-            .HasKey(f => f.FileId)
-            .HasName("PrimaryKey_FileId");
+            .HasKey(f => f.FileId);
 
-        // Define the relationship between Folder and its files
-        modelBuilder.Entity<Folder>()
-            .HasMany(f => f.Files)
-            .WithOne(f => f.Folder)
-            .HasForeignKey(file => file.FolderId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<File>()
+            .HasOne(f => f.Folder)
+            .WithMany(f => f.Files)
+            .HasForeignKey(f => f.FolderId);
 
-        // Define the self-referencing relationship for Folder
         modelBuilder.Entity<Folder>()
-            .HasOne<Folder>()
-            .WithMany()
-            .HasForeignKey(f => f.ParentId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasKey(f => f.FolderId);
+
+        modelBuilder.Entity<Folder>()
+            .HasOne(f => f.ParentFolder)
+            .WithMany(f => f.Subfolders)
+            .HasForeignKey(f => f.ParentFolderId);
     }
 }

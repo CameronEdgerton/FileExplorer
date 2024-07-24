@@ -1,5 +1,4 @@
 ﻿using FileFolderExplorer.Models;
-using FileFolderExplorer.Repositories;
 using FileFolderExplorer.Repositories.Interfaces;
 using FileFolderExplorer.Services.Interfaces;
 
@@ -13,7 +12,7 @@ public class FolderService(IFolderRepository repository) : IFolderService
         {
             FolderId = Guid.NewGuid(),
             Name = name,
-            ParentId = parentId
+            ParentFolderId = parentId
         };
         
         // If we have the parentId, we need to validate the parent folder exists before creating a relationship with
