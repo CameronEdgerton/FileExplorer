@@ -4,34 +4,25 @@ using File = FileFolderExplorer.Models.File;
 
 namespace FileFolderExplorer.Services;
 
-public class FileService(IFileRepository repository, IWebHostEnvironment hostEnvironment) : IFileService
+public class FileService(IFileRepository repository) : IFileService
 {
     public async Task<File> UploadFileAsync(IFormFile file, Guid folderId)
     {
-        if (file == null || file.Length == 0)
+        if (file.Length < 1)
             throw new ArgumentException("No file uploaded");
         
-        var fileName = Path.GetFileName(file.FileName);
-        
         // check the extension is .csv or .geojson
-        var extension = Path.GetExtension(fileName);
+        var extension = Path.GetExtension(file.FileName);
         if (extension != ".csv" && extension != ".geojson")
             throw new ArgumentException("Invalid file type");
-
-        var filePath = Path.Combine(hostEnvironment.WebRootPath, "uploads", fileName);
-
-        await using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
 
         var uploadedFile = new File()
         {
             FileId = Guid.NewGuid(),
-            Name = fileName,
+            Name = file.FileName,
             FileType = extension,
             FolderId = folderId,
-            Path = filePath
+            FormFile = file
         };
 
         await repository.AddAsync(uploadedFile);
