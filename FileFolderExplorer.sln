@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileFolderExplorer", "FileFolderExplorer\FileFolderExplorer.csproj", "{87B84DA9-7918-4491-9698-B17726B18665}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileFolderExplorer.UnitTest", "FileFolderExplorer.UnitTest\FileFolderExplorer.UnitTest.csproj", "{BEC60EC8-EF4A-432B-B6C7-F9560B5D614B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileFolderExplorer.Tests", "FileFolderExplorer.Tests\FileFolderExplorer.Tests.csproj", "{BEC60EC8-EF4A-432B-B6C7-F9560B5D614B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

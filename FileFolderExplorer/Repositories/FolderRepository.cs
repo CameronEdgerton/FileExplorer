@@ -26,4 +26,9 @@ public class FolderRepository(FileFolderExplorerContext dbContext) : IFolderRepo
     {
         return await dbContext.Folders.AnyAsync();
     }
+
+    public async Task<Folder?> GetFolderByIdAsync(Guid folderId)
+    {
+        return await dbContext.Folders.FindAsync(folderId);
+    }
 }

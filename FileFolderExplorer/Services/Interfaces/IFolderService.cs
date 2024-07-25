@@ -6,4 +6,5 @@ public interface IFolderService
 {
     Task<Folder> CreateFolderAsync(string name, Guid? parentId);
     Task<IEnumerable<Folder>> GetAllFoldersAsync();
+    Task<Folder?> GetFolderByIdAsync(Guid folderId);
 }

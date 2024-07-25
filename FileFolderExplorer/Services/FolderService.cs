@@ -4,7 +4,7 @@ using FileFolderExplorer.Services.Interfaces;
 
 namespace FileFolderExplorer.Services;
 
-public class FolderService(IFolderRepository repository) : IFolderService
+public class FolderService(IFolderRepository folderRepository) : IFolderService
 {
     public async Task<Folder> CreateFolderAsync(string name, Guid? parentId)
     {
@@ -19,7 +19,7 @@ public class FolderService(IFolderRepository repository) : IFolderService
         // the new folder
         if (parentId != null)
         {
-            var parentExists = await repository.FolderExistsById(parentId.Value);
+            var parentExists = await folderRepository.FolderExistsById(parentId.Value);
             if (!parentExists)
             {
                 throw new Exception("Parent folder not found");
@@ -28,23 +28,28 @@ public class FolderService(IFolderRepository repository) : IFolderService
         else
         {
             // if the parentId is null we add the folder to the root directory
-            var anyFolderExists = await repository.AnyFolderExists();
+            var anyFolderExists = await folderRepository.AnyFolderExists();
             if (!anyFolderExists)
             {
                 // If there are no folders in the database, the folder becomes the root folder
-                await repository.AddAsync(folder);
+                await folderRepository.AddAsync(folder);
                 return folder;
             }
             // If there are folders in the database but we haven't specified a parent folder, we should throw an error
             throw new Exception("Invalid parent folder id");
         }
         
-        await repository.AddAsync(folder);
+        await folderRepository.AddAsync(folder);
         return folder;
     }
     
     public async Task<IEnumerable<Folder>> GetAllFoldersAsync()
     {
-        return await repository.GetAllAsync();
+        return await folderRepository.GetAllAsync();
+    }
+    
+    public async Task<Folder?> GetFolderByIdAsync(Guid folderId)
+    {
+        return await folderRepository.GetFolderByIdAsync(folderId);
     }
 }

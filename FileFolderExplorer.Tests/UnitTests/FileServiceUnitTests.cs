@@ -2,26 +2,20 @@ using FileFolderExplorer.Repositories.Interfaces;
 using FileFolderExplorer.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Moq;
 using File = FileFolderExplorer.Models.File;
 
-namespace FileFolderExplorer.UnitTest;
+namespace FileFolderExplorer.UnitTest.UnitTests;
 
 public class FileServiceUnitTests
 {
     private readonly Mock<IFileRepository> _mockFileRepository;
     private readonly FileService _fileService;
-    private readonly Mock<IConfiguration> _configurationMock;
-    private readonly string _storagePath;
 
     public FileServiceUnitTests()
     {
         _mockFileRepository = new Mock<IFileRepository>();
-        _configurationMock = new Mock<IConfiguration>();
-        _storagePath = Path.GetTempPath();
-        _configurationMock.Setup(config => config["StoragePath"]).Returns(_storagePath);
-        _fileService = new FileService(_mockFileRepository.Object, _configurationMock.Object);
+        _fileService = new FileService(_mockFileRepository.Object);
     }
     
     [Theory]
@@ -44,17 +38,11 @@ public class FileServiceUnitTests
         file.Should().NotBeNull();
         file.Name.Should().Be(fileName);
         file.FolderId.Should().Be(folderId);
+        file.Content.Should().BeEquivalentTo(System.Text.Encoding.UTF8.GetBytes(fileContent));
 
-        // Verify the file was saved to the file system
-        var filePath = Path.Combine(_storagePath, fileName);
-        System.IO.File.Exists(filePath).Should().BeTrue();
-        (await System.IO.File.ReadAllTextAsync(filePath)).Should().Be(fileContent);
 
-        // Verify the file metadata was saved to the repository
-        _mockFileRepository.Verify(r => r.AddAsync(It.Is<File>(f =>
-            f.Name == fileName &&
-            f.FolderId == folderId &&
-            f.FilePath == filePath)), Times.Once);
+        // Verify the file was saved to the repository
+        _mockFileRepository.Verify(repo => repo.AddAsync(It.IsAny<File>()), Times.Once);
     }
     
     [Fact]
@@ -68,6 +56,8 @@ public class FileServiceUnitTests
             new MemoryStream(System.Text.Encoding.UTF8.GetBytes(fileContent)),
             0, fileContent.Length, fileName, fileName);
 
+        _mockFileRepository.Setup(repo => repo.AddAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
+        
         // Act
         var act = async() =>
         {
@@ -95,9 +85,45 @@ public class FileServiceUnitTests
         };
 
         // Assert
-        await act.Should().ThrowAsync<ArgumentException>("No file uploaded");
+        await act.Should().ThrowAsync<ArgumentException>("File is empty");
         _mockFileRepository.Verify(repo => repo.AddAsync(It.IsAny<File>()), Times.Never);
     }
+    
+    [Fact]
+    public async Task GetFilesByFolderIdAsync_ShouldReturnFiles()
+    {
+        // Arrange
+        var folderId = Guid.NewGuid();
+        var content = new byte[] { 1, 2, 3, 4, 5 };
+        var files = new List<File>
+        {
+            new() { FileId = Guid.NewGuid(), Name = "test1.csv", Content = content , FolderId = folderId },
+            new() { FileId = Guid.NewGuid(), Name = "test2.geojson", Content = content, FolderId = folderId }
+        };
 
-   
+        _mockFileRepository.Setup(repo => repo.GetFilesByFolderIdAsync(folderId)).ReturnsAsync(files);
+
+        // Act
+        var result = (await _fileService.GetFilesByFolderIdAsync(folderId)).ToList();
+
+        // Assert
+        result.Should().HaveCount(2);
+        result.Should().Contain(files);
+    }
+    
+    [Fact]
+    public async Task GetFileByIdAsync_ShouldReturnFile()
+    {
+        // Arrange
+        var fileId = Guid.NewGuid();
+        var file = new File { FileId = fileId, Name = "test.csv", Content = [1, 2, 3, 4, 5], FolderId = Guid.NewGuid() };
+
+        _mockFileRepository.Setup(repo => repo.GetFileByIdAsync(fileId)).ReturnsAsync(file);
+
+        // Act
+        var result = await _fileService.GetFileByIdAsync(fileId);
+
+        // Assert
+        result.Should().Be(file);
+    }
 }

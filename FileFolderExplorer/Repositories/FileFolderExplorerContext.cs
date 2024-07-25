@@ -28,7 +28,7 @@ public class FileFolderExplorerContext(DbContextOptions<FileFolderExplorerContex
         {
             entity.HasKey(f => f.FileId);
             entity.Property(f => f.Name).IsRequired();
-            entity.Property(f => f.FilePath).IsRequired();
+            entity.Property(f => f.Content).IsRequired();
             entity.HasOne(f => f.Folder)
                 .WithMany(f => f.Files)
                 .HasForeignKey(f => f.FolderId);
