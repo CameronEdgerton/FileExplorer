@@ -2,6 +2,7 @@ using FileFolderExplorer.Repositories.Interfaces;
 using FileFolderExplorer.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using File = FileFolderExplorer.Models.File;
 
@@ -11,46 +12,49 @@ public class FileServiceUnitTests
 {
     private readonly Mock<IFileRepository> _mockFileRepository;
     private readonly FileService _fileService;
+    private readonly Mock<IConfiguration> _configurationMock;
+    private readonly string _storagePath;
 
     public FileServiceUnitTests()
     {
         _mockFileRepository = new Mock<IFileRepository>();
-        _fileService = new FileService(_mockFileRepository.Object);
+        _configurationMock = new Mock<IConfiguration>();
+        _storagePath = Path.GetTempPath();
+        _configurationMock.Setup(config => config["StoragePath"]).Returns(_storagePath);
+        _fileService = new FileService(_mockFileRepository.Object, _configurationMock.Object);
     }
     
     [Theory]
     [InlineData(".csv")]
     [InlineData(".geojson")]
-    public async Task UploadFileAsync_WithValidFile_ReturnsFile(string fileType)
+    public async Task UploadFileAsync_WithValidFile_ReturnsFile(string extension)
     {
         // Arrange
-        var fileName = $"{Guid.NewGuid().ToString()}{fileType}";
         var folderId = Guid.NewGuid();
-        var fileMock = new Mock<IFormFile>();
-        var ms = new MemoryStream();
-        var writer = new StreamWriter(ms);
-        await writer.WriteAsync("test");
-        await writer.FlushAsync();
-        ms.Position = 0;
-        fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
-        fileMock.Setup(f => f.FileName).Returns(fileName);
-        fileMock.Setup(f => f.Length).Returns(ms.Length);
-        fileMock.Setup(f => f.ContentType).Returns("multipart/form-data");
-
-        _mockFileRepository
-            .Setup(repo => repo.AddAsync(It.IsAny<File>()))
-            .Returns(Task.CompletedTask);
+        var fileName = $"test{extension}";
+        const string fileContent = "test content";
+        var formFile = new FormFile(
+            new MemoryStream(System.Text.Encoding.UTF8.GetBytes(fileContent)),
+            0, fileContent.Length, fileName, fileName);
 
         // Act
-        var file = await _fileService.UploadFileAsync(fileMock.Object, folderId);
+        var file = await _fileService.UploadFileAsync(formFile, folderId);
 
         // Assert
         file.Should().NotBeNull();
         file.Name.Should().Be(fileName);
-        file.FileType.Should().Be(fileType);
         file.FolderId.Should().Be(folderId);
-        file.FormFile.Length.Should().Be(ms.Length);
-        _mockFileRepository.Verify(repo => repo.AddAsync(It.IsAny<File>()), Times.Once);
+
+        // Verify the file was saved to the file system
+        var filePath = Path.Combine(_storagePath, fileName);
+        System.IO.File.Exists(filePath).Should().BeTrue();
+        (await System.IO.File.ReadAllTextAsync(filePath)).Should().Be(fileContent);
+
+        // Verify the file metadata was saved to the repository
+        _mockFileRepository.Verify(r => r.AddAsync(It.Is<File>(f =>
+            f.Name == fileName &&
+            f.FolderId == folderId &&
+            f.FilePath == filePath)), Times.Once);
     }
     
     [Fact]
@@ -58,21 +62,16 @@ public class FileServiceUnitTests
     {
         // Arrange
         var folderId = Guid.NewGuid();
-        var fileMock = new Mock<IFormFile>();
-        var ms = new MemoryStream();
-        var writer = new StreamWriter(ms);
-        await writer.WriteAsync("test");
-        await writer.FlushAsync();
-        ms.Position = 0;
-        fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
-        fileMock.Setup(f => f.FileName).Returns("test.txt");
-        fileMock.Setup(f => f.Length).Returns(ms.Length);
-        fileMock.Setup(f => f.ContentType).Returns("multipart/form-data");
+        const string fileName = "test.txt";
+        const string fileContent = "test content";
+        var formFile = new FormFile(
+            new MemoryStream(System.Text.Encoding.UTF8.GetBytes(fileContent)),
+            0, fileContent.Length, fileName, fileName);
 
         // Act
         var act = async() =>
         {
-            await _fileService.UploadFileAsync(fileMock.Object, folderId);
+            await _fileService.UploadFileAsync(formFile, folderId);
         };
 
         // Assert
@@ -85,13 +84,14 @@ public class FileServiceUnitTests
     {
         // Arrange
         var folderId = Guid.NewGuid();
-        var fileMock = new Mock<IFormFile>();
-        fileMock.Setup(f => f.Length).Returns(0);
+        var formFile = new FormFile(
+            new MemoryStream(System.Text.Encoding.UTF8.GetBytes(string.Empty)),
+            0, 0, string.Empty, string.Empty);
 
         // Act
         var act = async() =>
         {
-            await _fileService.UploadFileAsync(fileMock.Object, folderId);
+            await _fileService.UploadFileAsync(formFile, folderId);
         };
 
         // Assert
