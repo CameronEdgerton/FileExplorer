@@ -11,20 +11,27 @@ public class FileFolderExplorerContext(DbContextOptions<FileFolderExplorerContex
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<File>()
-            .HasKey(f => f.FileId);
+        modelBuilder.Entity<Folder>(entity =>
+        {
+            entity.HasKey(f => f.FolderId);
+            entity.Property(f => f.Name).IsRequired();
+            entity.HasMany(f => f.Files)
+                .WithOne(f => f.Folder)
+                .HasForeignKey(f => f.FolderId);
+            entity.HasMany(f => f.Subfolders)
+                .WithOne(f => f.ParentFolder)
+                .HasForeignKey(f => f.ParentFolderId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
 
-        modelBuilder.Entity<File>()
-            .HasOne(f => f.Folder)
-            .WithMany(f => f.Files)
-            .HasForeignKey(f => f.FolderId);
-
-        modelBuilder.Entity<Folder>()
-            .HasKey(f => f.FolderId);
-
-        modelBuilder.Entity<Folder>()
-            .HasOne(f => f.ParentFolder)
-            .WithMany(f => f.Subfolders)
-            .HasForeignKey(f => f.ParentFolderId);
+        modelBuilder.Entity<File>(entity =>
+        {
+            entity.HasKey(f => f.FileId);
+            entity.Property(f => f.Name).IsRequired();
+            entity.Property(f => f.FilePath).IsRequired();
+            entity.HasOne(f => f.Folder)
+                .WithMany(f => f.Files)
+                .HasForeignKey(f => f.FolderId);
+        });
     }
 }
