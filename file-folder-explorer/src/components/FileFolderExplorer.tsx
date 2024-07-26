@@ -104,7 +104,7 @@ const FileFolderExplorer = () => {
                                 {currentFolder.parentFolderId ? (
                                     <li onClick={() => setCurrentFolderId('')}>Back to root</li>
                                 ) : null}
-                                {currentFolder.subFolders.map((folder) => (
+                                {currentFolder.subFolders && currentFolder.subFolders.map((folder) => (
                                     <li key={folder.folderId} onClick={() => setCurrentFolderId(folder.folderId)}>
                                         {folder.name}
                                     </li>
@@ -114,7 +114,7 @@ const FileFolderExplorer = () => {
                         <div style={{flex: 3}}>
                             <h3>Content</h3>
                             <ul>
-                                {currentFolder.subFolders.map((folder) => (
+                                {currentFolder.subFolders && currentFolder.subFolders.map((folder) => (
                                     <li key={folder.folderId} onClick={() => setCurrentFolderId(folder.folderId)}>
                                         📁 {folder.name}
                                     </li>
