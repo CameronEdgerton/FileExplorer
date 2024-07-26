@@ -4,7 +4,7 @@ import {parseFolders} from '../utils';
 
 interface Folder {
     folderId: string;
-    parentFolderId: string;
+    parentFolderId: string | null;
     name: string;
     subFolders: Folder[];
     files: File[];
@@ -54,8 +54,10 @@ const FileFolderExplorer = () => {
         if (newFolderName) {
             await createFolder(newFolderName, currentFolderId);
             setNewFolderName('');
+            // Refresh the current folder
             const folder = await getFolderById(currentFolderId);
             setCurrentFolder(folder);
+            updateBreadcrumb(folder);
         }
     };
 
@@ -65,6 +67,19 @@ const FileFolderExplorer = () => {
             const folder = await getFolderById(currentFolderId);
             setCurrentFolder(folder);
         }
+    };
+
+    const renderSubFolders = (folder: Folder) => {
+        return (
+            <ul>
+                {folder.subFolders && folder.subFolders.map((subFolder) => (
+                    <li key={subFolder.folderId} onClick={() => setCurrentFolderId(subFolder.folderId)}>
+                        {subFolder.name}
+                        {subFolder.subFolders && renderSubFolders(subFolder)}
+                    </li>
+                ))}
+            </ul>
+        );
     };
 
     return (
@@ -104,11 +119,7 @@ const FileFolderExplorer = () => {
                                 {currentFolder.parentFolderId ? (
                                     <li onClick={() => setCurrentFolderId('')}>Back to root</li>
                                 ) : null}
-                                {currentFolder.subFolders && currentFolder.subFolders.map((folder) => (
-                                    <li key={folder.folderId} onClick={() => setCurrentFolderId(folder.folderId)}>
-                                        {folder.name}
-                                    </li>
-                                ))}
+                                {renderSubFolders(currentFolder)}
                             </ul>
                         </div>
                         <div style={{flex: 3}}>
