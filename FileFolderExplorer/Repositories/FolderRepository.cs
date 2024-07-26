@@ -9,7 +9,8 @@ public class FolderRepository(FileFolderExplorerContext dbContext) : IFolderRepo
     public async Task AddAsync(Folder entity)
     {
         await dbContext.Folders.AddAsync(entity);
-        await dbContext.SaveChangesAsync();;
+        await dbContext.SaveChangesAsync();
+        ;
     }
 
     public async Task<IEnumerable<Folder>> GetAllAsync()
@@ -29,6 +30,9 @@ public class FolderRepository(FileFolderExplorerContext dbContext) : IFolderRepo
 
     public async Task<Folder?> GetFolderByIdAsync(Guid folderId)
     {
-        return await dbContext.Folders.FindAsync(folderId);
+        return await dbContext.Folders
+            .Include(x => x.Subfolders)
+            .Include(x => x.ParentFolder)
+            .FirstOrDefaultAsync(x => x.FolderId == folderId);
     }
 }

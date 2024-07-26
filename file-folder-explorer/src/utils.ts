@@ -1,5 +1,6 @@
 ﻿interface Folder {
     folderId: string;
+    parentFolderId: string;
     name: string;
     subFolders: Folder[];
     files: File[];
@@ -21,6 +22,7 @@ export const parseFolders = (data: any): Folder[] => {
 
         const folder: Folder = {
             folderId: folderData.folderId,
+            parentFolderId: folderData.parentFolderId,
             name: folderData.name,
             subFolders: [],
             files: [],

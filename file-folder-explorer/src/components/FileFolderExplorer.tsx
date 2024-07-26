@@ -4,6 +4,7 @@ import {parseFolders} from '../utils';
 
 interface Folder {
     folderId: string;
+    parentFolderId: string;
     name: string;
     subFolders: Folder[];
     files: File[];
@@ -100,7 +101,9 @@ const FileFolderExplorer = () => {
                     <div style={{display: 'flex'}}>
                         <div style={{flex: 1}}>
                             <ul>
-                                <li onClick={() => setCurrentFolderId('')}>root</li>
+                                {currentFolder.parentFolderId ? (
+                                    <li onClick={() => setCurrentFolderId('')}>Back to root</li>
+                                ) : null}
                                 {currentFolder.subFolders.map((folder) => (
                                     <li key={folder.folderId} onClick={() => setCurrentFolderId(folder.folderId)}>
                                         {folder.name}
