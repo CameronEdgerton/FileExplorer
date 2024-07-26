@@ -18,7 +18,7 @@ public class FolderController(IFolderService folderService) : ControllerBase
     }
 
     [HttpGet("all")]
-    public async Task<IActionResult> GetFolders()
+    public async Task<IActionResult> GetAllFolders()
     {
         var folders = await folderService.GetAllFoldersAsync();
         return Ok(folders);
