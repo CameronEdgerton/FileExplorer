@@ -1,21 +1,22 @@
-﻿using FileFolderExplorer.Services.Interfaces;
+﻿using FileFolderExplorer.Models;
+using FileFolderExplorer.Services.Interfaces;
 using FileFolderExplorer.Utils;
 using Microsoft.AspNetCore.Mvc;
 using File = FileFolderExplorer.Models.File;
 
 namespace FileFolderExplorer.Controllers;
 
-[Route("api/file")]
+[Route("api/files")]
 [ApiController]
 public class FileController(IFileService fileService) : ControllerBase
 {
     [HttpPost("upload")]
-    public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] string folderId)
+    public async Task<IActionResult> UploadFile([FromForm] UploadFileRequest fileRequest)
     {
-        var folderIdGuid = GuidHelper.TryParse(folderId);
+        var folderIdGuid = GuidHelper.TryParse(fileRequest.FolderId);
         if (folderIdGuid == null) return BadRequest();
 
-        var uploadedFile = await fileService.UploadFileAsync(file, folderIdGuid.Value);
+        var uploadedFile = await fileService.UploadFileAsync(fileRequest.File, folderIdGuid.Value);
         return Ok(uploadedFile);
     }
 

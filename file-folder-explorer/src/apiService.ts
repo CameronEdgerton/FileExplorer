@@ -28,7 +28,7 @@ export const createFolder = async (folderName: string, parentFolderId: string) =
 };
 
 export const uploadFile = async (file: File, folderId: string) => {
-    const url = `${API_URL}/file`;
+    const url = `${API_URL}/files/upload`;
 
     const formData = new FormData();
     formData.append('file', file);

@@ -1,4 +1,4 @@
-﻿import React, {useEffect, useState} from 'react';
+﻿import React, {useEffect, useRef, useState} from 'react';
 import {createFolder, getAllFolders, getFolderById, uploadFile} from "../apiService";
 import {parseFolders} from '../utils';
 
@@ -21,6 +21,7 @@ const FileFolderExplorer = () => {
     const [currentFolderId, setCurrentFolderId] = useState<string>('');
     const [newFolderName, setNewFolderName] = useState<string>('');
     const [breadcrumb, setBreadcrumb] = useState<Folder[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const fetchFolders = async () => {
@@ -41,12 +42,14 @@ const FileFolderExplorer = () => {
     }, [currentFolderId]);
 
     const updateBreadcrumb = (folder: Folder) => {
-        const newBreadcrumb = [];
-        let current: Folder | null = folder;
-        while (current) {
-            newBreadcrumb.unshift(current);
-            current = current.parentFolder;
-        }
+        const newBreadcrumb: Folder[] = [];
+        const buildBreadcrumb = (folder: Folder) => {
+            if (folder.parentFolder) {
+                buildBreadcrumb(folder.parentFolder);
+            }
+            newBreadcrumb.push(folder);
+        };
+        buildBreadcrumb(folder);
         setBreadcrumb(newBreadcrumb);
     };
 
@@ -54,7 +57,6 @@ const FileFolderExplorer = () => {
         if (newFolderName) {
             await createFolder(newFolderName, currentFolderId);
             setNewFolderName('');
-            // Refresh the current folder
             const folder = await getFolderById(currentFolderId);
             setCurrentFolder(folder);
             updateBreadcrumb(folder);
@@ -63,10 +65,18 @@ const FileFolderExplorer = () => {
 
     const handleUploadFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event?.target?.files?.[0] && currentFolderId) {
-            await uploadFile(event?.target?.files?.[0], currentFolderId);
+            console.log('Selected file:', event.target.files[0]); // Log the selected file
+            await uploadFile(event.target.files[0], currentFolderId);
             const folder = await getFolderById(currentFolderId);
             setCurrentFolder(folder);
+        } else {
+            console.log('No file selected or currentFolderId is missing');
         }
+    };
+
+
+    const triggerFileInput = () => {
+        fileInputRef.current?.click();
     };
 
     const renderSubFolders = (folder: Folder) => {
@@ -95,8 +105,14 @@ const FileFolderExplorer = () => {
                 <button onClick={handleCreateFolder}>Create Folder</button>
             </div>
             <div>
-                <input type="file" accept=".csv,.geojson" onChange={handleUploadFile}/>
-                <button>Upload file</button>
+                <input
+                    type="file"
+                    accept=".csv,.geojson"
+                    style={{display: 'none'}}
+                    ref={fileInputRef}
+                    onChange={handleUploadFile}
+                />
+                <button onClick={triggerFileInput}>Upload File</button>
             </div>
             <div>
                 <div>
