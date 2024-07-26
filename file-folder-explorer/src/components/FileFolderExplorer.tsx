@@ -1,20 +1,9 @@
 ﻿import React, {useEffect, useRef, useState} from 'react';
 import {createFolder, getAllFolders, getFolderById, uploadFile} from "../apiService";
 import {parseFolders} from '../utils';
+import {Folder} from "../interfaces";
+import FolderStructure from "./FolderStructure";
 
-interface Folder {
-    folderId: string;
-    parentFolderId: string | null;
-    name: string;
-    subFolders: Folder[];
-    files: File[];
-    parentFolder: Folder | null;
-}
-
-interface File {
-    fileId: string;
-    name: string;
-}
 
 const FileFolderExplorer = () => {
     const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
@@ -23,7 +12,8 @@ const FileFolderExplorer = () => {
     const [breadcrumb, setBreadcrumb] = useState<Folder[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
+
+    /*useEffect(() => {
         const fetchFolders = async () => {
             if (!currentFolderId) {
                 const folders = await getAllFolders();
@@ -39,6 +29,18 @@ const FileFolderExplorer = () => {
             }
         };
         fetchFolders();
+    }, [currentFolderId]);*/
+
+    useEffect(() => {
+        const fetchAllFolders = async () => {
+            const folders = await getAllFolders();
+            const parsedFolders = parseFolders(folders);
+            if (parsedFolders.length > 0) {
+                setCurrentFolder(parsedFolders[0]);
+                updateBreadcrumb(parsedFolders[0]);
+            }
+        };
+        fetchAllFolders();
     }, [currentFolderId]);
 
     const updateBreadcrumb = (folder: Folder) => {
@@ -74,6 +76,13 @@ const FileFolderExplorer = () => {
         }
     };
 
+    const handleFolderClick = async (folderId: string) => {
+        setCurrentFolderId(folderId);
+        const folder = await getFolderById(folderId);
+        setCurrentFolder(folder);
+        console.log('Folder clicked:', folderId);
+    };
+
 
     const triggerFileInput = () => {
         fileInputRef.current?.click();
@@ -82,12 +91,20 @@ const FileFolderExplorer = () => {
     const renderSubFolders = (folder: Folder) => {
         return (
             <ul>
-                {folder.subFolders && folder.subFolders.map((subFolder) => (
-                    <li key={subFolder.folderId} onClick={() => setCurrentFolderId(subFolder.folderId)}>
-                        {subFolder.name}
-                        {subFolder.subFolders && renderSubFolders(subFolder)}
-                    </li>
-                ))}
+                {/* Render the current folder itself */}
+                <li key={folder.folderId}
+                    onClick={() => {
+                        console.log('Folder clicked:', folder.folderId);
+                        setCurrentFolderId(folder.folderId);
+                    }}>
+                    {folder.name}
+                    {/* Render subfolders recursively */}
+                    {folder.subFolders && folder.subFolders.length > 0 && (
+                        <ul>
+                            {folder.subFolders.map((subFolder) => renderSubFolders(subFolder))}
+                        </ul>
+                    )}
+                </li>
             </ul>
         );
     };
@@ -95,24 +112,26 @@ const FileFolderExplorer = () => {
     return (
         <div>
             <h1>Welcome to Folder Explorer</h1>
-            <div>
-                <input
-                    type="text"
-                    value={newFolderName}
-                    onChange={(event) => setNewFolderName(event.target.value)}
-                    placeholder={'Enter folder name'}
-                />
-                <button onClick={handleCreateFolder}>Create Folder</button>
-            </div>
-            <div>
-                <input
-                    type="file"
-                    accept=".csv,.geojson"
-                    style={{display: 'none'}}
-                    ref={fileInputRef}
-                    onChange={handleUploadFile}
-                />
-                <button onClick={triggerFileInput}>Upload File</button>
+            <div style={{display: 'flex'}}>
+                <div>
+                    <input
+                        type="file"
+                        accept=".csv,.geojson"
+                        style={{display: 'none'}}
+                        ref={fileInputRef}
+                        onChange={handleUploadFile}
+                    />
+                    <button onClick={triggerFileInput}>Upload File</button>
+                </div>
+                <div>
+                    <button onClick={handleCreateFolder}>Create Folder</button>
+                    <input
+                        type="text"
+                        value={newFolderName}
+                        onChange={(event) => setNewFolderName(event.target.value)}
+                        placeholder={'Folder name to be created'}
+                    />
+                </div>
             </div>
             <div>
                 <div>
@@ -126,20 +145,13 @@ const FileFolderExplorer = () => {
                     ))}
                 </div>
             </div>
+
             {currentFolder && (
                 <div>
-                    <h2>{currentFolder.name}</h2>
                     <div style={{display: 'flex'}}>
-                        <div style={{flex: 1}}>
-                            <ul>
-                                {currentFolder.parentFolderId ? (
-                                    <li onClick={() => setCurrentFolderId('')}>Back to root</li>
-                                ) : null}
-                                {renderSubFolders(currentFolder)}
-                            </ul>
-                        </div>
+                        <FolderStructure data={currentFolder} onFolderClick={handleFolderClick}/>
                         <div style={{flex: 3}}>
-                            <h3>Content</h3>
+                            <h3>{currentFolder.name}</h3>
                             <ul>
                                 {currentFolder.subFolders && currentFolder.subFolders.map((folder) => (
                                     <li key={folder.folderId} onClick={() => setCurrentFolderId(folder.folderId)}>
