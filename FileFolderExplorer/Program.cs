@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using FileFolderExplorer.Repositories;
 using FileFolderExplorer.Repositories.Interfaces;
 using FileFolderExplorer.Services;
@@ -7,7 +8,10 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+// Prevent circular references
+builder.Services.AddControllers().AddJsonOptions(x =>
+    x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<FileFolderExplorerContext>(options =>
@@ -16,6 +20,15 @@ builder.Services.AddScoped<IFileRepository, FileRepository>();
 builder.Services.AddScoped<IFolderRepository, FolderRepository>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IFolderService, FolderService>();
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        policy => policy.WithOrigins("http://localhost:3000")
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
 
 var app = builder.Build();
 
@@ -26,8 +39,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowSpecificOrigin");
 app.UseRouting();
 app.MapControllers();
 app.Run();
 
-public partial class Program { }
+public partial class Program
+{
+}

@@ -1,35 +1,42 @@
 ﻿using FileFolderExplorer.Services.Interfaces;
+using FileFolderExplorer.Utils;
 using Microsoft.AspNetCore.Mvc;
 using File = FileFolderExplorer.Models.File;
 
 namespace FileFolderExplorer.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/file")]
 [ApiController]
 public class FileController(IFileService fileService) : ControllerBase
 {
     [HttpPost("upload")]
-    public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] Guid folderId)
+    public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] string folderId)
     {
-        var uploadedFile = await fileService.UploadFileAsync(file, folderId);
+        var folderIdGuid = GuidHelper.TryParse(folderId);
+        if (folderIdGuid == null) return BadRequest();
+
+        var uploadedFile = await fileService.UploadFileAsync(file, folderIdGuid.Value);
         return Ok(uploadedFile);
     }
-    
-    [HttpGet("folder/{folderId:guid}")]
-    public async Task<ActionResult<IEnumerable<File>>> GetFilesByFolderId(Guid folderId)
+
+    [HttpGet("folder/{folderId}")]
+    public async Task<ActionResult<IEnumerable<File>>> GetFilesByFolderId(string folderId)
     {
-        var files = await fileService.GetFilesByFolderIdAsync(folderId);
+        var folderIdGuid = GuidHelper.TryParse(folderId);
+        if (folderIdGuid == null) return BadRequest();
+
+        var files = await fileService.GetFilesByFolderIdAsync(folderIdGuid.Value);
         return Ok(files);
     }
-    
-    [HttpGet("{fileId:guid}")]
-    public async Task<ActionResult<File>> GetFileById(Guid fileId)
+
+    [HttpGet("{fileId}")]
+    public async Task<ActionResult<File>> GetFileById(string fileId)
     {
-        var file = await fileService.GetFileByIdAsync(fileId);
-        if (file == null)
-        {
-            return NotFound();
-        }
+        var fileIdGuid = GuidHelper.TryParse(fileId);
+        if (fileIdGuid == null) return BadRequest();
+
+        var file = await fileService.GetFileByIdAsync(fileIdGuid.Value);
+        if (file == null) return NotFound();
         return Ok(file);
     }
 }

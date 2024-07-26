@@ -6,6 +6,6 @@ public class Folder
     public Guid? ParentFolderId { get; set; }
     public required string Name { get; set; }
     public Folder ParentFolder { get; set; }
-    public ICollection<File> Files { get; set; }
-    public ICollection<Folder> Subfolders { get; set; }
+    public ICollection<File> Files { get; set; } = [];
+    public ICollection<Folder> Subfolders { get; set; } = [];
 }

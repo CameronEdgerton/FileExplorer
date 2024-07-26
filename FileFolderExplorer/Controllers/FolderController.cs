@@ -1,36 +1,38 @@
 ﻿using FileFolderExplorer.Models;
 using FileFolderExplorer.Services.Interfaces;
+using FileFolderExplorer.Utils;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FileFolderExplorer.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/folders")]
 [ApiController]
 public class FolderController(IFolderService folderService) : ControllerBase
 {
-
-    [HttpPost]
-    public async Task<IActionResult> CreateFolder(string name, Guid? parentId)
+    [HttpPost("create")]
+    public async Task<IActionResult> CreateFolder([FromBody] CreateFolderRequest request)
     {
-        var folder = await folderService.CreateFolderAsync(name, parentId);
+        var parentId = GuidHelper.TryParse(request.ParentFolderId);
+        var folder = await folderService.CreateFolderAsync(request.FolderName, parentId);
         return Ok(folder);
     }
-    
-    [HttpGet]
+
+    [HttpGet("all")]
     public async Task<IActionResult> GetFolders()
     {
         var folders = await folderService.GetAllFoldersAsync();
         return Ok(folders);
     }
-    
-    [HttpGet("{id:guid}")]
-    public async Task<ActionResult<Folder>> GetFolderById(Guid id)
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Folder>> GetFolderById(string id)
     {
-        var folder = await folderService.GetFolderByIdAsync(id);
-        if (folder == null)
-        {
-            return NotFound();
-        }
+        var folderId = GuidHelper.TryParse(id);
+        if (folderId == null) return BadRequest();
+
+        var folder = await folderService.GetFolderByIdAsync(folderId.Value);
+        if (folder == null) return NotFound();
+
         return Ok(folder);
     }
 }
