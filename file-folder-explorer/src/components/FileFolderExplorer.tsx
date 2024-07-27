@@ -13,8 +13,8 @@ const FileFolderExplorer = () => {
     const [newFolderName, setNewFolderName] = useState<string>('');
     const [folderAdded, setFolderAdded] = useState<boolean>(false);
     const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
-    const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [error, setError] = useState<string | null>(null);
 
 
     useEffect(() => {
@@ -54,9 +54,9 @@ const FileFolderExplorer = () => {
         if (currentFolderId === '') {
             setError('You must select a folder to upload the file to');
             return;
-        } 
+        }
         setError(null);
-        
+
         if (event?.target?.files?.[0] && currentFolderId) {
             try {
                 await uploadFile(event.target.files[0], currentFolderId);
@@ -107,11 +107,11 @@ const FileFolderExplorer = () => {
     };
 
     return (
-        <div>
-            <h1>Welcome to Folder Explorer</h1>
-            {error && <div style={{color: 'red'}}>{error}</div>}
-            <div style={{display: 'flex'}}>
-                <div>
+        <div className=' m-6'>
+            <h1 className='text-2xl w-full text-center font-bold'>Welcome to Folder Explorer</h1>
+
+            <div className="flex w-min-full mt-8">
+                <div className=' flex justify-center items-center border-r-[1px] border-solid border-slate-300 px-6'>
                     <input
                         type="file"
                         accept=".csv,.geojson"
@@ -119,11 +119,22 @@ const FileFolderExplorer = () => {
                         ref={fileInputRef}
                         onChange={handleUploadFile}
                     />
-                    <button onClick={triggerFileInput}>Upload File</button>
+                    <button
+                        className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium 
+                        rounded-lg text-sm px-5 py-2.5 focus:outline-none"
+                        onClick={triggerFileInput}>Upload File
+                    </button>
                 </div>
-                <div>
-                    <button onClick={handleCreateFolder}>Create Folder</button>
+
+                <div className=' flex gap-4 justify-center items-center px-6 w-[50vw]'>
+                    <button
+                        className="w-1/3 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 
+                        font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none"
+                        onClick={handleCreateFolder}>Create Folder
+                    </button>
                     <input
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg 
+                        focus:ring-blue-500 focus:border-blue-500 block w-2/3 p-2.5"
                         type="text"
                         value={newFolderName}
                         onChange={(event) => setNewFolderName(event.target.value)}
@@ -131,23 +142,36 @@ const FileFolderExplorer = () => {
                     />
                 </div>
             </div>
-            <div style={{display: 'flex'}}>
-                {folderTree && (
-                    <FolderStructure data={folderTree} onFolderClick={handleFolderClick}/>
-                )}
 
-                {currentFolder && (
-                    <div>
-                        <div>
-                            <Breadcrumbs data={breadcrumbs} onBreadcrumbClick={handleFolderClick}/>
-                        </div>
-                        <div style={{display: 'flex'}}>
-                            <div style={{flex: 3}}>
-                                <FolderContents data={currentFolder}/>
+            {error && <div className='text-red-700 font-medium w-fit px-4 bg-red-100 ml-6 mt-4 py-[0.5]'>{error}</div>}
+
+            <div className="flex gap-20 mt-8">
+                <div className='border-r-[1.5px] border-solid border-slate-300 pl-6 pr-40'>
+                    {folderTree && (
+                        <FolderStructure data={folderTree} onFolderClick={handleFolderClick}/>
+                    )}
+                </div>
+
+                <div className='flex flex-col gap-16'>
+                    {currentFolder && (
+                        <>
+                            <div>
+                                <div>
+                                    <Breadcrumbs data={breadcrumbs} onBreadcrumbClick={handleFolderClick}/>
+                                </div>
+                                <div className='flex gap-1 flex-col'>
+                                    <FolderContents data={currentFolder}/>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                )}
+                            <div>
+                                <p className='text-lg font-medium'>File Preview : </p>
+                                <div className=' w-[30rem] h-60 bg-blue-200 flex justify-center items-center rounded'>
+                                    TO DO
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
             </div>
         </div>
     );

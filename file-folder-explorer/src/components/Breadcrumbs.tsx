@@ -1,5 +1,4 @@
-﻿import React from 'react';
-import {Folder} from "../interfaces";
+﻿import {Folder} from "../interfaces";
 
 interface BreadcrumbsProps {
     data: Folder[];
@@ -8,9 +7,7 @@ interface BreadcrumbsProps {
 
 function Breadcrumbs({data, onBreadcrumbClick}: BreadcrumbsProps) {
 
-    if (!data) {
-        return null;
-    }
+    if (!data) return null;
 
     const handleBreadcrumbClick = (folderId: string) => {
         onBreadcrumbClick(folderId);
@@ -19,9 +16,10 @@ function Breadcrumbs({data, onBreadcrumbClick}: BreadcrumbsProps) {
     return (
         <div>
             {data.map((folder, index) => (
-                <span key={folder.folderId}>
+                <span key={folder.folderId} className="font-medium">
                     {index > 0 && ' / '}
-                    <span onClick={() => handleBreadcrumbClick(folder.folderId)}>{folder.name}</span>
+                    <span className="underline cursor-pointer"
+                          onClick={() => handleBreadcrumbClick(folder.folderId)}>{folder.name}</span>
                 </span>
             ))}
         </div>

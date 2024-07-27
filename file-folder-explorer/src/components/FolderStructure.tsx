@@ -1,5 +1,5 @@
-﻿import React from 'react';
-import {Folder} from "../interfaces";
+﻿import {Folder} from "../interfaces";
+import {useState} from "react";
 
 interface FolderStructureProps {
     data: Folder;
@@ -7,20 +7,21 @@ interface FolderStructureProps {
 }
 
 function FolderStructure({data, onFolderClick}: FolderStructureProps) {
-    if (!data) {
-        return null;
-    }
 
+    const [expanded, setExpanded] = useState<boolean>(false);
     const handleFolderClick = (folderId: string) => {
         onFolderClick(folderId);
     };
 
     return (
-        <div style={{marginTop: 5}}>
-            <div>
-                <span onClick={() => handleFolderClick(data.folderId)}>📁 {data.name}</span>
+        <div className=' my-2'>
+            <div className="relative flex py-2 items-center">
+                {<button onClick={() => setExpanded(!expanded)}>{expanded ? '🔽' : '▶️'}</button>}
+                <span className='font-medium cursor-pointer'
+                      onClick={() => handleFolderClick(data.folderId)}> 📁 {data.name}</span>
             </div>
-            <div style={{marginLeft: 20}}>
+
+            <div className='ml-8 pl-2' style={{display: expanded ? "block" : "none"}}>
                 {data.subFolders && data.subFolders.map((item) => (
                     <FolderStructure key={item.folderId} data={item} onFolderClick={onFolderClick}/>
                 ))}
