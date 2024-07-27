@@ -24,7 +24,6 @@ public class FolderController(IFolderService folderService) : ControllerBase
             return BadRequest(e.Message);
         }
 
-
         return Ok(folder);
     }
 
@@ -36,10 +35,10 @@ public class FolderController(IFolderService folderService) : ControllerBase
     }
 
     [HttpGet("{folderId}")]
-    public async Task<ActionResult<Folder>> GetFolderById(string folderId)
+    public async Task<ActionResult> GetFolderById(string folderId)
     {
         var parsedFolderId = GuidHelper.TryParse(folderId);
-        if (parsedFolderId == null) return BadRequest();
+        if (parsedFolderId == null || parsedFolderId == Guid.Empty) return BadRequest();
 
         var folder = await folderService.GetFolderByIdAsync(parsedFolderId.Value);
         if (folder == null)
