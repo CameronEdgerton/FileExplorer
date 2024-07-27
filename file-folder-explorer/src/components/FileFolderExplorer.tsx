@@ -4,6 +4,7 @@ import {findPathToFolder, parseSingleFolder} from '../utils';
 import {Folder} from "../interfaces";
 import FolderStructure from "./FolderStructure";
 import FolderContents from "./FolderContents";
+import Breadcrumbs from "./Breadcrumbs";
 
 const FileFolderExplorer = () => {
     const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
@@ -11,7 +12,7 @@ const FileFolderExplorer = () => {
     const [currentFolderId, setCurrentFolderId] = useState<string>('');
     const [newFolderName, setNewFolderName] = useState<string>('');
     const [folderAdded, setFolderAdded] = useState<boolean>(false);
-    const [breadcrumb, setBreadcrumb] = useState<Folder[]>([]);
+    const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -39,14 +40,18 @@ const FileFolderExplorer = () => {
     };
 
     const handleUploadFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!currentFolderId) {
+            console.error('You must select a folder to upload the file to');
+            return;
+        }
+
         if (event?.target?.files?.[0] && currentFolderId) {
             await uploadFile(event.target.files[0], currentFolderId);
+            // if we have the current folder open, we need to refresh the contents
             if (currentFolder?.folderId == currentFolderId) {
                 const folder = await getFolderById(currentFolderId);
                 const parsedFolder = parseSingleFolder(folder);
                 setCurrentFolder(parsedFolder);
-            } else {
-                console.log('No file selected or currentFolderId is missing');
             }
         }
     };
@@ -58,13 +63,13 @@ const FileFolderExplorer = () => {
         setCurrentFolder(parsedFolder);
 
         const breadcrumbTrail = findPathToFolder(rootFolder, folderId);
-        setBreadcrumb(breadcrumbTrail);
+        setBreadcrumbs(breadcrumbTrail);
     };
 
 // Function to set the initial breadcrumb based on the root folder
     const initializeBreadcrumb = (root: Folder) => {
         const initialBreadcrumb = [root];
-        setBreadcrumb(initialBreadcrumb);
+        setBreadcrumbs(initialBreadcrumb);
     };
 
 // Call initializeBreadcrumb when you set the root folder
@@ -111,16 +116,7 @@ const FileFolderExplorer = () => {
                 {currentFolder && (
                     <div>
                         <div>
-                            <div>
-                                {breadcrumb.map((folder, index) => (
-                                    <span key={folder.folderId}>
-                                    {index > 0 && ' / '}
-                                        <span onClick={() => handleFolderClick(folder.folderId)}>
-                                            {folder.name}
-                                        </span>
-                                    </span>
-                                ))}
-                            </div>
+                            <Breadcrumbs data={breadcrumbs} onBreadcrumbClick={handleFolderClick}/>
                         </div>
                         <div style={{display: 'flex'}}>
                             <div style={{flex: 3}}>
