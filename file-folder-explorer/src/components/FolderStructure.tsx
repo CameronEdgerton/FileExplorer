@@ -7,7 +7,7 @@ interface FolderStructureProps {
 }
 
 function FolderStructure({data, onFolderClick}: FolderStructureProps) {
-    const [expanded, setExpanded] = React.useState(false);
+    /*const [expanded, setExpanded] = React.useState(false);*/
 
     if (!data) {
         return null;
@@ -21,9 +21,9 @@ function FolderStructure({data, onFolderClick}: FolderStructureProps) {
         <div style={{marginTop: 5}}>
             <div>
                 <span onClick={() => handleFolderClick(data.folderId)}>📁 {data.name}</span>
-                <button onClick={() => setExpanded(!expanded)}>{expanded ? '🔽' : '▶️'}</button>
+                {/*<button onClick={() => setExpanded(!expanded)}>{expanded ? '🔽' : '▶️'}</button>*/}
             </div>
-            <div style={{marginLeft: 20, display: expanded ? "block" : "none"}}>
+            <div style={{marginLeft: 20}}>
                 {data.subFolders && data.subFolders.map((item) => (
                     <FolderStructure key={item.folderId} data={item} onFolderClick={onFolderClick}/>
                 ))}
