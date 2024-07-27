@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Moq;
 using File = FileFolderExplorer.Models.File;
 
-namespace FileFolderExplorer.UnitTest.UnitTests.Services;
+namespace FileFolderExplorer.UnitTest.Services;
 
 public class FileServiceUnitTests
 {

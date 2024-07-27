@@ -14,9 +14,18 @@ public class FileController(IFileService fileService) : ControllerBase
     public async Task<IActionResult> UploadFile([FromForm] UploadFileRequest fileRequest)
     {
         var folderIdGuid = GuidHelper.TryParse(fileRequest.FolderId);
-        if (folderIdGuid == null) return BadRequest();
+        if (folderIdGuid == null || folderIdGuid == Guid.Empty) return BadRequest();
+        File uploadedFile;
 
-        var uploadedFile = await fileService.UploadFileAsync(fileRequest.File, folderIdGuid.Value);
+        try
+        {
+            uploadedFile = await fileService.UploadFileAsync(fileRequest.File, folderIdGuid.Value);
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest(e.Message);
+        }
+
         return Ok(uploadedFile);
     }
 

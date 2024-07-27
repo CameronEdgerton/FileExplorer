@@ -4,7 +4,7 @@ using FileFolderExplorer.Services;
 using FluentAssertions;
 using Moq;
 
-namespace FileFolderExplorer.UnitTest.UnitTests.Services;
+namespace FileFolderExplorer.UnitTest.Services;
 
 public class FolderServiceUnitTests
 {

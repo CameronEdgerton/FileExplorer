@@ -5,7 +5,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
-namespace FileFolderExplorer.UnitTest.UnitTests.Controllers;
+namespace FileFolderExplorer.UnitTest.Controllers;
 
 public class FolderControllerUnitTests
 {
