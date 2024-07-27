@@ -14,17 +14,23 @@ const FileFolderExplorer = () => {
     const [folderAdded, setFolderAdded] = useState<boolean>(false);
     const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [error, setError] = useState<string | null>(null);
 
 
     useEffect(() => {
         const fetchFolderTree = async () => {
-            const rootFolder = await getFolderTree();
-            if (!rootFolder) {
-                return;
-            }
-            const parsedFolder = parseSingleFolder(rootFolder);
-            if (parsedFolder) {
-                setRootFolder(parsedFolder);
+            try {
+                const rootFolder = await getFolderTree();
+                if (!rootFolder) {
+                    return;
+                }
+                const parsedFolder = parseSingleFolder(rootFolder);
+                if (parsedFolder) {
+                    setRootFolder(parsedFolder);
+                }
+                setError(null);
+            } catch (error: unknown) {
+                setError('Error fetching folder tree');
             }
         };
         fetchFolderTree();
@@ -33,7 +39,12 @@ const FileFolderExplorer = () => {
 
     const handleCreateFolder = async () => {
         if (newFolderName) {
-            await createFolder(newFolderName, currentFolderId);
+            try {
+                await createFolder(newFolderName, currentFolderId);
+                setError(null);
+            } catch (error: unknown) {
+                setError('Error creating folder');
+            }
             setNewFolderName('');
             setFolderAdded(!folderAdded);
         }
@@ -41,12 +52,19 @@ const FileFolderExplorer = () => {
 
     const handleUploadFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
         if (currentFolderId === '') {
-            console.error('You must select a folder to upload the file to');
+            setError('You must select a folder to upload the file to');
             return;
-        }
-
+        } 
+        setError(null);
+        
         if (event?.target?.files?.[0] && currentFolderId) {
-            await uploadFile(event.target.files[0], currentFolderId);
+            try {
+                await uploadFile(event.target.files[0], currentFolderId);
+                setError(null);
+            } catch (error: unknown) {
+                setError('Error uploading file');
+            }
+
             // if we have the current folder open, we need to refresh the contents
             if (currentFolder?.folderId == currentFolderId) {
                 const folder = await getFolderById(currentFolderId);
@@ -58,9 +76,14 @@ const FileFolderExplorer = () => {
 
     const handleFolderClick = async (folderId: string) => {
         setCurrentFolderId(folderId);
-        const folder = await getFolderById(folderId);
-        const parsedFolder = parseSingleFolder(folder);
-        setCurrentFolder(parsedFolder);
+        try {
+            const folder = await getFolderById(folderId);
+            const parsedFolder = parseSingleFolder(folder);
+            setCurrentFolder(parsedFolder);
+            setError(null);
+        } catch (error: unknown) {
+            setError('Error fetching folder');
+        }
 
         const breadcrumbTrail = findPathToFolder(rootFolder, folderId);
         setBreadcrumbs(breadcrumbTrail);
@@ -79,7 +102,6 @@ const FileFolderExplorer = () => {
         setBreadcrumbs(initialBreadcrumb);
     };
 
-
     const triggerFileInput = () => {
         fileInputRef.current?.click();
     };
@@ -87,6 +109,7 @@ const FileFolderExplorer = () => {
     return (
         <div>
             <h1>Welcome to Folder Explorer</h1>
+            {error && <div style={{color: 'red'}}>{error}</div>}
             <div style={{display: 'flex'}}>
                 <div>
                     <input
