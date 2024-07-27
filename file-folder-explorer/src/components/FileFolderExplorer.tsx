@@ -40,7 +40,7 @@ const FileFolderExplorer = () => {
     };
 
     const handleUploadFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (!currentFolderId) {
+        if (currentFolderId === '') {
             console.error('You must select a folder to upload the file to');
             return;
         }
@@ -66,18 +66,18 @@ const FileFolderExplorer = () => {
         setBreadcrumbs(breadcrumbTrail);
     };
 
-// Function to set the initial breadcrumb based on the root folder
-    const initializeBreadcrumb = (root: Folder) => {
-        const initialBreadcrumb = [root];
-        setBreadcrumbs(initialBreadcrumb);
-    };
-
-// Call initializeBreadcrumb when you set the root folder
+    // Call initializeBreadcrumb when you set the root folder
     useEffect(() => {
         if (rootFolder) {
             initializeBreadcrumb(rootFolder);
         }
     }, [rootFolder]);
+
+    // Function to set the initial breadcrumb based on the root folder
+    const initializeBreadcrumb = (root: Folder) => {
+        const initialBreadcrumb = [root];
+        setBreadcrumbs(initialBreadcrumb);
+    };
 
 
     const triggerFileInput = () => {
