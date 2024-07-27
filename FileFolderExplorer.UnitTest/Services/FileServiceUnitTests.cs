@@ -114,28 +114,6 @@ public class FileServiceUnitTests
     }
 
     [Fact]
-    public async Task GetFilesByFolderIdAsync_ShouldReturnFiles()
-    {
-        // Arrange
-        var folderId = Guid.NewGuid();
-        var content = new byte[] { 1, 2, 3, 4, 5 };
-        var files = new List<File>
-        {
-            new() { FileId = Guid.NewGuid(), Name = "test1.csv", Content = content, FolderId = folderId },
-            new() { FileId = Guid.NewGuid(), Name = "test2.geojson", Content = content, FolderId = folderId }
-        };
-
-        _mockFileRepository.Setup(repo => repo.GetFilesByFolderIdAsync(folderId)).ReturnsAsync(files);
-
-        // Act
-        var result = (await _fileService.GetFilesByFolderIdAsync(folderId)).ToList();
-
-        // Assert
-        result.Should().HaveCount(2);
-        result.Should().Contain(files);
-    }
-
-    [Fact]
     public async Task GetFileByIdAsync_ShouldReturnFile()
     {
         // Arrange

@@ -32,11 +32,6 @@ public class FileService(IFileRepository fileRepository, IFolderRepository folde
         return await fileRepository.GetFileByIdAsync(fileId);
     }
 
-    public async Task<IEnumerable<File>> GetFilesByFolderIdAsync(Guid folderId)
-    {
-        return await fileRepository.GetFilesByFolderIdAsync(folderId);
-    }
-
     private async Task VerifyFolderExists(Guid folderId)
     {
         var folderExists = await folderRepository.FolderExistsById(folderId);

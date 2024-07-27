@@ -29,16 +29,6 @@ public class FileController(IFileService fileService) : ControllerBase
         return Ok(uploadedFile);
     }
 
-    [HttpGet("folder/{folderId}")]
-    public async Task<ActionResult<IEnumerable<File>>> GetFilesByFolderId(string folderId)
-    {
-        var folderIdGuid = GuidHelper.TryParse(folderId);
-        if (folderIdGuid == null) return BadRequest();
-
-        var files = await fileService.GetFilesByFolderIdAsync(folderIdGuid.Value);
-        return Ok(files);
-    }
-
     [HttpGet("{fileId}")]
     public async Task<ActionResult<File>> GetFileById(string fileId)
     {
