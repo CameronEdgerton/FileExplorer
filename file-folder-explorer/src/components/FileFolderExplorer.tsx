@@ -7,14 +7,14 @@ import FolderContents from "./FolderContents";
 import Breadcrumbs from "./Breadcrumbs";
 
 const FileFolderExplorer = () => {
+    const [folderTree, setFolderTree] = useState<Folder | null>(null);
     const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
-    const [rootFolder, setRootFolder] = useState<Folder | null>(null);
     const [currentFolderId, setCurrentFolderId] = useState<string>('');
     const [newFolderName, setNewFolderName] = useState<string>('');
     const [folderAdded, setFolderAdded] = useState<boolean>(false);
     const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const [error, setError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
 
     useEffect(() => {
@@ -26,7 +26,7 @@ const FileFolderExplorer = () => {
                 }
                 const parsedFolder = parseSingleFolder(rootFolder);
                 if (parsedFolder) {
-                    setRootFolder(parsedFolder);
+                    setFolderTree(parsedFolder);
                 }
                 setError(null);
             } catch (error: unknown) {
@@ -85,16 +85,16 @@ const FileFolderExplorer = () => {
             setError('Error fetching folder');
         }
 
-        const breadcrumbTrail = findPathToFolder(rootFolder, folderId);
+        const breadcrumbTrail = findPathToFolder(folderTree, folderId);
         setBreadcrumbs(breadcrumbTrail);
     };
 
     // Call initializeBreadcrumb when you set the root folder
     useEffect(() => {
-        if (rootFolder) {
-            initializeBreadcrumb(rootFolder);
+        if (folderTree) {
+            initializeBreadcrumb(folderTree);
         }
-    }, [rootFolder]);
+    }, [folderTree]);
 
     // Function to set the initial breadcrumb based on the root folder
     const initializeBreadcrumb = (root: Folder) => {
@@ -132,8 +132,8 @@ const FileFolderExplorer = () => {
                 </div>
             </div>
             <div style={{display: 'flex'}}>
-                {rootFolder && (
-                    <FolderStructure data={rootFolder} onFolderClick={handleFolderClick}/>
+                {folderTree && (
+                    <FolderStructure data={folderTree} onFolderClick={handleFolderClick}/>
                 )}
 
                 {currentFolder && (
