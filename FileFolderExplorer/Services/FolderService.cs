@@ -26,9 +26,10 @@ public class FolderService(IFolderRepository folderRepository) : IFolderService
         return await GetFolderByIdAsync(folder.FolderId);
     }
 
-    public async Task<IList<Folder>> GetAllFoldersAsync()
+    public async Task<Folder?> GetFolderTreeAsync()
     {
-        return await folderRepository.GetAllAsync();
+        var folders = await folderRepository.GetFolderTreeAsync();
+        return folders.FirstOrDefault();
     }
 
     public async Task<Folder?> GetFolderByIdAsync(Guid folderId)

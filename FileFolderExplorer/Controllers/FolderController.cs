@@ -28,11 +28,11 @@ public class FolderController(IFolderService folderService) : ControllerBase
         return Ok(folder);
     }
 
-    [HttpGet("all")]
-    public async Task<IActionResult> GetAllFolders()
+    [HttpGet("tree")]
+    public async Task<IActionResult> GetFolderTree()
     {
-        var folders = await folderService.GetAllFoldersAsync();
-        return Ok(folders);
+        var root = await folderService.GetFolderTreeAsync();
+        return Ok(root);
     }
 
     [HttpGet("{folderId}")]

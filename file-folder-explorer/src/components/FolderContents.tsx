@@ -22,7 +22,7 @@ function FolderContents({data}: FolderContentProps) {
                 ))}
             </div>
             <div style={{marginLeft: 20}}>
-                {Array.isArray(data.files) && data.files.map((item) => (
+                {data.files && data.files.map((item) => (
                     <span key={item.fileId}>📄 {item.name}</span>
                 ))}
             </div>

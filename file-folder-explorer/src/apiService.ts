@@ -3,10 +3,10 @@
 const API_URL = 'http://localhost:5054/api';
 
 
-export const getAllFolders = async () => {
-    const url = `${API_URL}/folders/all`;
-
+export const getFolderTree = async () => {
+    const url = `${API_URL}/folders/tree`;
     const response = await axios.get(url);
+    console.log('root:', response.data);
     return response.data;
 };
 

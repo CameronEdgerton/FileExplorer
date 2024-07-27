@@ -1,10 +1,9 @@
 ﻿import React, {useEffect, useRef, useState} from 'react';
-import {createFolder, getAllFolders, getFolderById, uploadFile} from "../apiService";
-import {parseFolders, parseSingleFolder} from '../utils';
+import {createFolder, getFolderById, getFolderTree, uploadFile} from "../apiService";
+import {parseSingleFolder} from '../utils';
 import {Folder} from "../interfaces";
 import FolderStructure from "./FolderStructure";
 import FolderContents from "./FolderContents";
-
 
 const FileFolderExplorer = () => {
     const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
@@ -17,15 +16,18 @@ const FileFolderExplorer = () => {
 
 
     useEffect(() => {
-        const fetchAllFolders = async () => {
-            const folders = await getAllFolders();
-            const parsedFolders = parseFolders(folders);
-            if (parsedFolders.length > 0) {
-                setRootFolder(parsedFolders[0]);
-                updateBreadcrumb(parsedFolders[0]);
+        const fetchFolderTree = async () => {
+            const rootFolder = await getFolderTree();
+            if (!rootFolder) {
+                return;
+            }
+            const parsedFolder = parseSingleFolder(rootFolder);
+            if (parsedFolder) {
+                setRootFolder(parsedFolder);
+                updateBreadcrumb(parsedFolder);
             }
         };
-        fetchAllFolders();
+        fetchFolderTree();
     }, [folderAdded]);
 
     const updateBreadcrumb = (folder: Folder) => {
@@ -40,25 +42,35 @@ const FileFolderExplorer = () => {
         setBreadcrumb(newBreadcrumb);
     };
 
+    const bread = (folders: Folder[]) => {
+        return folders.map((folder, index) => (
+            <span key={folder.folderId}>
+                {index > 0 && ' / '}
+                <span onClick={() => handleBreadcrumbClick(folder.folderId)}>
+                    {folder.name}
+                </span>
+            </span>
+        ));
+    }
+
     const handleCreateFolder = async () => {
         if (newFolderName) {
             await createFolder(newFolderName, currentFolderId);
             setNewFolderName('');
             setFolderAdded(!folderAdded);
-            /*            const folder = await getFolderById(currentFolderId);
-                        setCurrentFolder(folder);
-                        updateBreadcrumb(folder);*/
         }
     };
 
     const handleUploadFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event?.target?.files?.[0] && currentFolderId) {
-            console.log('Selected file:', event.target.files[0]); // Log the selected file
             await uploadFile(event.target.files[0], currentFolderId);
-            /*const folder = await getFolderById(currentFolderId);
-            setCurrentFolder(folder);*/
-        } else {
-            console.log('No file selected or currentFolderId is missing');
+            if (currentFolder?.folderId == currentFolderId) {
+                const folder = await getFolderById(currentFolderId);
+                const parsedFolder = parseSingleFolder(folder);
+                setCurrentFolder(parsedFolder);
+            } else {
+                console.log('No file selected or currentFolderId is missing');
+            }
         }
     };
 
@@ -71,6 +83,11 @@ const FileFolderExplorer = () => {
         updateBreadcrumb(parsedFolder);
     };
 
+    const handleBreadcrumbClick = async (folderId: string) => {
+        const folder = await getFolderById(folderId);
+        const parsedFolder = parseSingleFolder(folder);
+        setCurrentFolder(parsedFolder);
+    }
 
     const triggerFileInput = () => {
         fileInputRef.current?.click();
@@ -107,6 +124,18 @@ const FileFolderExplorer = () => {
 
                 {currentFolder && (
                     <div>
+                        <div>
+                            <div>
+                                {breadcrumb.map((folder, index) => (
+                                    <span key={folder.folderId}>
+                                    {index > 0 && ' / '}
+                                        <span onClick={() => handleFolderClick(folder.folderId)}>
+                                            {folder.name}
+                                        </span>
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
                         <div style={{display: 'flex'}}>
                             <div style={{flex: 3}}>
                                 <FolderContents data={currentFolder}/>
@@ -115,9 +144,8 @@ const FileFolderExplorer = () => {
                     </div>
                 )}
             </div>
-
         </div>
     );
-};
+}
 
 export default FileFolderExplorer;

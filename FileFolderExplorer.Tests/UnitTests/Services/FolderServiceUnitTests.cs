@@ -4,7 +4,7 @@ using FileFolderExplorer.Services;
 using FluentAssertions;
 using Moq;
 
-namespace FileFolderExplorer.UnitTest.UnitTests;
+namespace FileFolderExplorer.UnitTest.UnitTests.Services;
 
 public class FolderServiceUnitTests
 {
@@ -39,7 +39,7 @@ public class FolderServiceUnitTests
 
         // Assert
         folder.Should().NotBeNull();
-        folder.Name.Should().Be(folderName);
+        folder!.Name.Should().Be(folderName);
         folder.ParentFolderId.Should().Be(parentId);
         _mockFolderRepository.Verify(repo => repo.AddAsync(It.IsAny<Folder>()), Times.Once);
     }
@@ -94,7 +94,7 @@ public class FolderServiceUnitTests
 
         // Assert
         folder.Should().NotBeNull();
-        folder.Name.Should().Be(folderName);
+        folder!.Name.Should().Be(folderName);
         folder.ParentFolderId.Should().BeNull();
         _mockFolderRepository.Verify(repo => repo.AddAsync(It.IsAny<Folder>()), Times.Once);
     }
@@ -118,7 +118,7 @@ public class FolderServiceUnitTests
     }
 
     [Fact]
-    public async Task GetAllFoldersAsync_ReturnsFolders()
+    public async Task GetFolderTree_ReturnsOnlyOneFolderAtTopLevel()
     {
         // Arrange
         var folders = new List<Folder>
@@ -127,15 +127,55 @@ public class FolderServiceUnitTests
             new() { Name = "Folder 2" }
         };
 
-        _mockFolderRepository.Setup(repo => repo.GetAllAsync()).ReturnsAsync(folders);
+        _mockFolderRepository.Setup(repo => repo.GetFolderTreeAsync()).ReturnsAsync(folders);
 
         // Act
-        var result = await _folderService.GetAllFoldersAsync();
+        var result = await _folderService.GetFolderTreeAsync();
 
         // Assert
         result.Should().NotBeNull();
-        result.Should().HaveCount(2);
-        result.Should().BeEquivalentTo(folders);
+        result!.Name.Should().Be("Folder 1");
+    }
+
+    [Fact]
+    public async Task GetFolderTree_ReturnsNull_IfNoFolders()
+    {
+        // Arrange
+        _mockFolderRepository.Setup(repo => repo.GetFolderTreeAsync()).ReturnsAsync(new List<Folder>());
+
+        // Act
+        var result = await _folderService.GetFolderTreeAsync();
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetFolderTree_ReturnsNestedFolders()
+    {
+        // Arrange
+        var folders = new List<Folder>
+        {
+            new()
+            {
+                Name = "Folder 1",
+                Subfolders = new List<Folder>
+                {
+                    new() { Name = "Folder 1.1" },
+                    new() { Name = "Folder 1.2" }
+                }
+            }
+        };
+
+        _mockFolderRepository.Setup(repo => repo.GetFolderTreeAsync()).ReturnsAsync(folders);
+
+        // Act
+        var result = await _folderService.GetFolderTreeAsync();
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Name.Should().Be("Folder 1");
+        result.Subfolders.Should().HaveCount(2);
     }
 
     [Fact]

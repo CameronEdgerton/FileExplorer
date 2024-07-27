@@ -12,7 +12,7 @@ public class FolderRepository(FileFolderExplorerContext dbContext) : IFolderRepo
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task<IList<Folder>> GetAllAsync()
+    public async Task<List<Folder>> GetFolderTreeAsync()
     {
         return await dbContext.Folders
             .Include(x => x.Files)
