@@ -34,6 +34,9 @@ public class FileServiceUnitTests
             new MemoryStream(Encoding.UTF8.GetBytes(fileContent)),
             0, fileContent.Length, fileName, fileName);
 
+        _mockFileRepository.Setup(repo => repo.AddAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
+        _mockFolderRepository.Setup(repo => repo.FolderExistsById(It.IsAny<Guid>())).ReturnsAsync(true);
+
         // Act
         var file = await _fileService.UploadFileAsync(formFile, folderId);
 
@@ -60,12 +63,36 @@ public class FileServiceUnitTests
             0, fileContent.Length, fileName, fileName);
 
         _mockFileRepository.Setup(repo => repo.AddAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
+        _mockFolderRepository.Setup(repo => repo.FolderExistsById(It.IsAny<Guid>())).ReturnsAsync(true);
 
         // Act
         var act = async () => { await _fileService.UploadFileAsync(formFile, folderId); };
 
         // Assert
         await act.Should().ThrowAsync<ArgumentException>("Invalid file type");
+        _mockFileRepository.Verify(repo => repo.AddAsync(It.IsAny<File>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UploadFileAsync_WithNonExistingFolder_ThrowsError()
+    {
+        // Arrange
+        var folderId = Guid.NewGuid();
+        const string fileName = "test.csv";
+        const string fileContent = "test content";
+        var formFile = new FormFile(
+            new MemoryStream(Encoding.UTF8.GetBytes(fileContent)),
+            0, fileContent.Length, fileName, fileName);
+
+        _mockFileRepository.Setup(repo => repo.AddAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
+        // Return false to simulate a non-existing folder
+        _mockFolderRepository.Setup(repo => repo.FolderExistsById(It.IsAny<Guid>())).ReturnsAsync(false);
+
+        // Act
+        var act = async () => { await _fileService.UploadFileAsync(formFile, folderId); };
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentException>("Folder not found");
         _mockFileRepository.Verify(repo => repo.AddAsync(It.IsAny<File>()), Times.Never);
     }
 

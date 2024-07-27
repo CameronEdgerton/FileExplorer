@@ -4,9 +4,9 @@ namespace FileFolderExplorer.Repositories.Interfaces;
 
 public interface IFolderRepository
 {
-    Task<IEnumerable<Folder>> GetAllAsync();
+    Task<IList<Folder>> GetAllAsync();
     Task AddAsync(Folder folder);
-    Task<bool> FolderExistsById(Guid id);
+    Task<bool> FolderExistsById(Guid folderId);
     Task<bool> AnyFolderExists();
     Task<Folder?> GetFolderByIdAsync(Guid folderId);
 }

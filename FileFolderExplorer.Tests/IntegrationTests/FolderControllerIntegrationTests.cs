@@ -9,12 +9,12 @@ public class FolderControllerIntegrationTests(WebApplicationFactory<Program> fac
     : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client = factory.CreateClient();
-    private const string Route = "/api/folder";
-    
+    private const string Route = "/api/folders";
+
     [Fact]
     public async Task GetFolders_ShouldReturnFolders()
     {
-        var response = await _client.GetAsync(Route);
+        var response = await _client.GetAsync($"{Route}/all");
         response.EnsureSuccessStatusCode();
 
         var folders = await response.Content.ReadFromJsonAsync<List<Folder>>();
@@ -25,7 +25,7 @@ public class FolderControllerIntegrationTests(WebApplicationFactory<Program> fac
     /*[Fact]
     public async Task GetFolderById_ShouldReturnFolder()
     {
-        var folderId = Guid.NewGuid(); 
+        var folderId = Guid.NewGuid();
         var response = await _client.GetAsync($"{Route}/{folderId}");
         response.EnsureSuccessStatusCode();
 

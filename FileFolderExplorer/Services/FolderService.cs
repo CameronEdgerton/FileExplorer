@@ -6,44 +6,27 @@ namespace FileFolderExplorer.Services;
 
 public class FolderService(IFolderRepository folderRepository) : IFolderService
 {
-    public async Task<Folder> CreateFolderAsync(string name, Guid? parentId)
+    public async Task<Folder?> CreateFolderAsync(string folderName, Guid? parentFolderId)
     {
+        if (string.IsNullOrWhiteSpace(folderName)) throw new ArgumentException("Folder name cannot be empty");
+
         var folder = new Folder
         {
             FolderId = Guid.NewGuid(),
-            Name = name,
-            ParentFolderId = parentId
+            Name = folderName,
+            ParentFolderId = parentFolderId
         };
 
-        // If we have the parentId, we need to validate the parent folder exists before creating a relationship with
-        // the new folder
-        if (parentId != null)
-        {
-            var parentExists = await folderRepository.FolderExistsById(parentId.Value);
-            if (!parentExists) throw new Exception("Parent folder not found");
-        }
-        else
-        {
-            // if the parentId is null we add the folder to the root directory
-            var anyFolderExists = await folderRepository.AnyFolderExists();
-            if (!anyFolderExists)
-            {
-                // If there are no folders in the database, the folder becomes the root folder
-                await folderRepository.AddAsync(folder);
-                return folder;
-            }
-
-            // If there are folders in the database but we haven't specified a parent folder, we should throw an error
-            throw new Exception("Invalid parent folder id");
-        }
+        var parentFolderExists = await ParentFolderExists(parentFolderId);
+        if (!parentFolderExists) return await CreateRootFolder(folder);
 
         await folderRepository.AddAsync(folder);
-        folder = await folderRepository.GetFolderByIdAsync(folder.FolderId);
-        if (folder == null) throw new Exception("Folder not found");
-        return folder;
+
+        // Get the folder back from the db with its relationships populated
+        return await GetFolderByIdAsync(folder.FolderId);
     }
 
-    public async Task<IEnumerable<Folder>> GetAllFoldersAsync()
+    public async Task<IList<Folder>> GetAllFoldersAsync()
     {
         return await folderRepository.GetAllAsync();
     }
@@ -51,5 +34,22 @@ public class FolderService(IFolderRepository folderRepository) : IFolderService
     public async Task<Folder?> GetFolderByIdAsync(Guid folderId)
     {
         return await folderRepository.GetFolderByIdAsync(folderId);
+    }
+
+    private async Task<bool> ParentFolderExists(Guid? parentFolderId)
+    {
+        if (parentFolderId == null) return false;
+        var parentExists = await folderRepository.FolderExistsById(parentFolderId.Value);
+        if (!parentExists) throw new ArgumentException("Parent folder not found");
+        return true;
+    }
+
+    private async Task<Folder> CreateRootFolder(Folder folder)
+    {
+        // If there are no folders in the database, the folder becomes the root folder
+        var anyFolderExists = await folderRepository.AnyFolderExists();
+        if (anyFolderExists) throw new ArgumentException("Cannot create root folder when folders already exist");
+        await folderRepository.AddAsync(folder);
+        return folder;
     }
 }

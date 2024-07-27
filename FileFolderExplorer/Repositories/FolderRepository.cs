@@ -12,7 +12,7 @@ public class FolderRepository(FileFolderExplorerContext dbContext) : IFolderRepo
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Folder>> GetAllAsync()
+    public async Task<IList<Folder>> GetAllAsync()
     {
         return await dbContext.Folders
             .Include(x => x.Files)
@@ -22,9 +22,9 @@ public class FolderRepository(FileFolderExplorerContext dbContext) : IFolderRepo
             .ToListAsync();
     }
 
-    public async Task<bool> FolderExistsById(Guid id)
+    public async Task<bool> FolderExistsById(Guid folderId)
     {
-        return await dbContext.Folders.AnyAsync(f => f.FolderId == id);
+        return await dbContext.Folders.AnyAsync(f => f.FolderId == folderId);
     }
 
     public async Task<bool> AnyFolderExists()

@@ -8,18 +8,8 @@ public class FileService(IFileRepository fileRepository, IFolderRepository folde
 {
     public async Task<File> UploadFileAsync(IFormFile formFile, Guid folderId)
     {
-        if (formFile.Length < 1)
-            throw new ArgumentException("File is empty");
-
-        // verify the folderId exists
-        var folderExists = await folderRepository.FolderExistsById(folderId);
-        if (!folderExists)
-            throw new ArgumentException("Folder not found");
-
-        // check the extension is .csv or .geojson
-        var extension = Path.GetExtension(formFile.FileName);
-        if (extension != ".csv" && extension != ".geojson")
-            throw new ArgumentException("Invalid file type");
+        ValidateFormFile(formFile);
+        await VerifyFolderExists(folderId);
 
         using var memoryStream = new MemoryStream();
         await formFile.CopyToAsync(memoryStream);
@@ -45,5 +35,31 @@ public class FileService(IFileRepository fileRepository, IFolderRepository folde
     public async Task<IEnumerable<File>> GetFilesByFolderIdAsync(Guid folderId)
     {
         return await fileRepository.GetFilesByFolderIdAsync(folderId);
+    }
+
+    private async Task VerifyFolderExists(Guid folderId)
+    {
+        var folderExists = await folderRepository.FolderExistsById(folderId);
+        if (!folderExists)
+            throw new ArgumentException("Folder not found");
+    }
+
+    private static void ValidateFormFile(IFormFile formFile)
+    {
+        ValidateFileNotEmpty(formFile);
+        ValidateFileExtension(formFile);
+    }
+
+    private static void ValidateFileNotEmpty(IFormFile formFile)
+    {
+        if (formFile.Length < 1)
+            throw new ArgumentException("File is empty");
+    }
+
+    private static void ValidateFileExtension(IFormFile formFile)
+    {
+        var extension = Path.GetExtension(formFile.FileName);
+        if (extension != ".csv" && extension != ".geojson")
+            throw new ArgumentException("Invalid file type");
     }
 }
