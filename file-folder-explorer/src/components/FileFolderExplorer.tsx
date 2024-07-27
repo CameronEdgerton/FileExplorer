@@ -1,6 +1,6 @@
 ﻿import React, {useEffect, useRef, useState} from 'react';
 import {createFolder, getFolderById, getFolderTree, uploadFile} from "../apiService";
-import {parseSingleFolder} from '../utils';
+import {findPathToFolder, parseSingleFolder} from '../utils';
 import {Folder} from "../interfaces";
 import FolderStructure from "./FolderStructure";
 import FolderContents from "./FolderContents";
@@ -24,34 +24,11 @@ const FileFolderExplorer = () => {
             const parsedFolder = parseSingleFolder(rootFolder);
             if (parsedFolder) {
                 setRootFolder(parsedFolder);
-                updateBreadcrumb(parsedFolder);
             }
         };
         fetchFolderTree();
     }, [folderAdded]);
 
-    const updateBreadcrumb = (folder: Folder) => {
-        const newBreadcrumb: Folder[] = [];
-        const buildBreadcrumb = (folder: Folder) => {
-            if (folder.parentFolder) {
-                buildBreadcrumb(folder.parentFolder);
-            }
-            newBreadcrumb.push(folder);
-        };
-        buildBreadcrumb(folder);
-        setBreadcrumb(newBreadcrumb);
-    };
-
-    const bread = (folders: Folder[]) => {
-        return folders.map((folder, index) => (
-            <span key={folder.folderId}>
-                {index > 0 && ' / '}
-                <span onClick={() => handleBreadcrumbClick(folder.folderId)}>
-                    {folder.name}
-                </span>
-            </span>
-        ));
-    }
 
     const handleCreateFolder = async () => {
         if (newFolderName) {
@@ -79,15 +56,24 @@ const FileFolderExplorer = () => {
         const folder = await getFolderById(folderId);
         const parsedFolder = parseSingleFolder(folder);
         setCurrentFolder(parsedFolder);
-        console.log('Current folder:', parsedFolder);
-        updateBreadcrumb(parsedFolder);
+
+        const breadcrumbTrail = findPathToFolder(rootFolder, folderId);
+        setBreadcrumb(breadcrumbTrail);
     };
 
-    const handleBreadcrumbClick = async (folderId: string) => {
-        const folder = await getFolderById(folderId);
-        const parsedFolder = parseSingleFolder(folder);
-        setCurrentFolder(parsedFolder);
-    }
+// Function to set the initial breadcrumb based on the root folder
+    const initializeBreadcrumb = (root: Folder) => {
+        const initialBreadcrumb = [root];
+        setBreadcrumb(initialBreadcrumb);
+    };
+
+// Call initializeBreadcrumb when you set the root folder
+    useEffect(() => {
+        if (rootFolder) {
+            initializeBreadcrumb(rootFolder);
+        }
+    }, [rootFolder]);
+
 
     const triggerFileInput = () => {
         fileInputRef.current?.click();

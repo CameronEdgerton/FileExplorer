@@ -2,13 +2,11 @@
 import {Folder} from "../interfaces";
 
 interface FolderStructureProps {
-    data: Folder | null;
+    data: Folder;
     onFolderClick: (folderId: string) => void;
 }
 
 function FolderStructure({data, onFolderClick}: FolderStructureProps) {
-    /*const [expanded, setExpanded] = React.useState(false);*/
-
     if (!data) {
         return null;
     }
@@ -21,7 +19,6 @@ function FolderStructure({data, onFolderClick}: FolderStructureProps) {
         <div style={{marginTop: 5}}>
             <div>
                 <span onClick={() => handleFolderClick(data.folderId)}>📁 {data.name}</span>
-                {/*<button onClick={() => setExpanded(!expanded)}>{expanded ? '🔽' : '▶️'}</button>*/}
             </div>
             <div style={{marginLeft: 20}}>
                 {data.subFolders && data.subFolders.map((item) => (

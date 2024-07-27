@@ -39,3 +39,35 @@ export const parseSingleFolder = (folderData: any): Folder => {
 
     return createFolder(folderData);
 };
+
+
+// Utility function to find the path from root to the target folder
+export const findPathToFolder = (root: Folder | null, targetId: string): Folder[] => {
+    if (!root) {
+        return [];
+    }
+
+    const path: Folder[] = [];
+
+    const traverse = (currentFolder: Folder): boolean => {
+        path.push(currentFolder);
+
+        if (currentFolder.folderId === targetId) {
+            return true;
+        }
+
+        if (currentFolder.subFolders) {
+            for (let subFolder of currentFolder.subFolders) {
+                if (traverse(subFolder)) {
+                    return true;
+                }
+            }
+        }
+
+        path.pop();
+        return false;
+    };
+
+    traverse(root);
+    return path;
+};
