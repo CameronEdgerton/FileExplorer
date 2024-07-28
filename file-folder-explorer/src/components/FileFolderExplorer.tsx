@@ -1,15 +1,19 @@
 ﻿import React, {useEffect, useRef, useState} from 'react';
-import {createFolder, getFolderById, getFolderTree, uploadFile} from "../apiService";
+import {createFolder, getFileContent, getFolderById, getFolderTree, uploadFile} from "../apiService";
 import {findPathToFolder, parseSingleFolder} from '../utils';
-import {Folder} from "../interfaces";
+import {File, Folder} from "../interfaces";
 import FolderStructure from "./FolderStructure";
 import FolderContents from "./FolderContents";
 import Breadcrumbs from "./Breadcrumbs";
+import GeoJsonContent from "./GeoJsonContent";
+import CsvContent from "./CsvContent";
 
 const FileFolderExplorer = () => {
     const [folderTree, setFolderTree] = useState<Folder | null>(null);
     const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
     const [currentFolderId, setCurrentFolderId] = useState<string>('');
+    const [currentFile, setCurrentFile] = useState<File | null>(null);
+    const [fileContent, setFileContent] = useState<any>(null);
     const [newFolderName, setNewFolderName] = useState<string>('');
     const [folderAdded, setFolderAdded] = useState<boolean>(false);
     const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
@@ -36,6 +40,26 @@ const FileFolderExplorer = () => {
         fetchFolderTree();
     }, [folderAdded]);
 
+    useEffect(() => {
+        console.log('Current File at use effect:', currentFile);
+        if (currentFile) {
+            console.log('in here');
+            fetchFileContent(currentFile);
+        }
+    }, [currentFile]);
+
+    // Call initializeBreadcrumb when you set the root folder
+    useEffect(() => {
+        if (folderTree) {
+            initializeBreadcrumb(folderTree);
+        }
+    }, [folderTree]);
+
+    // Function to set the initial breadcrumb based on the root folder
+    const initializeBreadcrumb = (root: Folder) => {
+        const initialBreadcrumb = [root];
+        setBreadcrumbs(initialBreadcrumb);
+    };
 
     const handleCreateFolder = async () => {
         if (newFolderName) {
@@ -76,6 +100,8 @@ const FileFolderExplorer = () => {
 
     const handleFolderClick = async (folderId: string) => {
         setCurrentFolderId(folderId);
+        setCurrentFile(null);
+        setFileContent(null);
         try {
             const folder = await getFolderById(folderId);
             const parsedFolder = parseSingleFolder(folder);
@@ -89,18 +115,31 @@ const FileFolderExplorer = () => {
         setBreadcrumbs(breadcrumbTrail);
     };
 
-    // Call initializeBreadcrumb when you set the root folder
-    useEffect(() => {
-        if (folderTree) {
-            initializeBreadcrumb(folderTree);
-        }
-    }, [folderTree]);
+    const handleFileClick = async (file: File) => {
+        console.log('FileId', file.fileId);
+        setCurrentFile(file);
+        setFileContent(null);
+        console.log('Current File', file);
+    }
 
-    // Function to set the initial breadcrumb based on the root folder
-    const initializeBreadcrumb = (root: Folder) => {
-        const initialBreadcrumb = [root];
-        setBreadcrumbs(initialBreadcrumb);
+    const fetchFileContent = async (file: File) => {
+        try {
+            const content = await getFileContent(file.fileId);
+
+            if (file.name.endsWith('.csv')) {
+                console.log('CSV file content:', content);
+                setFileContent(content);
+            } else if (file.name.endsWith('.geojson')) {
+                console.log('GeoJSON file content:', content);
+                const parsedContent = JSON.parse(content);
+                setFileContent(parsedContent);
+            }
+        } catch (error: unknown) {
+            console.log('error', error);
+            setError('Error fetching file content');
+        }
     };
+
 
     const triggerFileInput = () => {
         fileInputRef.current?.click();
@@ -160,15 +199,19 @@ const FileFolderExplorer = () => {
                                     <Breadcrumbs data={breadcrumbs} onBreadcrumbClick={handleFolderClick}/>
                                 </div>
                                 <div className='flex gap-1 flex-col'>
-                                    <FolderContents data={currentFolder}/>
+                                    <FolderContents data={currentFolder} onFileClick={handleFileClick}/>
                                 </div>
                             </div>
-                            <div>
-                                <p className='text-lg font-medium'>File Preview : </p>
-                                <div className=' w-[30rem] h-60 bg-blue-200 flex justify-center items-center rounded'>
-                                    TO DO
+                            {currentFile && (
+                                <div className=" w-[30rem] flex justify-center items-center">
+                                    {currentFile.name.endsWith('.csv') && (
+                                        <CsvContent data={fileContent}/>
+                                    )}
+                                    {currentFile.name.endsWith('.geojson') && (
+                                        <GeoJsonContent data={fileContent}/>
+                                    )}
                                 </div>
-                            </div>
+                            )}
                         </>
                     )}
                 </div>

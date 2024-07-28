@@ -1,5 +1,5 @@
 ﻿using FileFolderExplorer.Controllers;
-using FileFolderExplorer.Models;
+using FileFolderExplorer.Dtos;
 using FileFolderExplorer.Services.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
@@ -87,6 +87,4 @@ public class FileControllerUnitTests
         result.Should().NotBeNull();
         result!.Value.Should().Be("Invalid file");
     }
-    
-    
 }

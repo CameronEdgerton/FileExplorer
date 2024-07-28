@@ -34,7 +34,7 @@ public class FileServiceUnitTests
             new MemoryStream(Encoding.UTF8.GetBytes(fileContent)),
             0, fileContent.Length, fileName, fileName);
 
-        _mockFileRepository.Setup(repo => repo.AddAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
+        _mockFileRepository.Setup(repo => repo.UploadFileAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
         _mockFolderRepository.Setup(repo => repo.FolderExistsById(It.IsAny<Guid>())).ReturnsAsync(true);
 
         // Act
@@ -48,7 +48,7 @@ public class FileServiceUnitTests
 
 
         // Verify the file was saved to the repository
-        _mockFileRepository.Verify(repo => repo.AddAsync(It.IsAny<File>()), Times.Once);
+        _mockFileRepository.Verify(repo => repo.UploadFileAsync(It.IsAny<File>()), Times.Once);
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class FileServiceUnitTests
             new MemoryStream(Encoding.UTF8.GetBytes(fileContent)),
             0, fileContent.Length, fileName, fileName);
 
-        _mockFileRepository.Setup(repo => repo.AddAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
+        _mockFileRepository.Setup(repo => repo.UploadFileAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
         _mockFolderRepository.Setup(repo => repo.FolderExistsById(It.IsAny<Guid>())).ReturnsAsync(true);
 
         // Act
@@ -70,7 +70,7 @@ public class FileServiceUnitTests
 
         // Assert
         await act.Should().ThrowAsync<ArgumentException>("Invalid file type");
-        _mockFileRepository.Verify(repo => repo.AddAsync(It.IsAny<File>()), Times.Never);
+        _mockFileRepository.Verify(repo => repo.UploadFileAsync(It.IsAny<File>()), Times.Never);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class FileServiceUnitTests
             new MemoryStream(Encoding.UTF8.GetBytes(fileContent)),
             0, fileContent.Length, fileName, fileName);
 
-        _mockFileRepository.Setup(repo => repo.AddAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
+        _mockFileRepository.Setup(repo => repo.UploadFileAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
         // Return false to simulate a non-existing folder
         _mockFolderRepository.Setup(repo => repo.FolderExistsById(It.IsAny<Guid>())).ReturnsAsync(false);
 
@@ -93,7 +93,7 @@ public class FileServiceUnitTests
 
         // Assert
         await act.Should().ThrowAsync<ArgumentException>("Folder not found");
-        _mockFileRepository.Verify(repo => repo.AddAsync(It.IsAny<File>()), Times.Never);
+        _mockFileRepository.Verify(repo => repo.UploadFileAsync(It.IsAny<File>()), Times.Never);
     }
 
     [Fact]
@@ -110,23 +110,44 @@ public class FileServiceUnitTests
 
         // Assert
         await act.Should().ThrowAsync<ArgumentException>("File is empty");
-        _mockFileRepository.Verify(repo => repo.AddAsync(It.IsAny<File>()), Times.Never);
+        _mockFileRepository.Verify(repo => repo.UploadFileAsync(It.IsAny<File>()), Times.Never);
     }
 
     [Fact]
-    public async Task GetFileByIdAsync_ShouldReturnFile()
+    public async Task GetFileContentByIdAsync_WithExistingFile_ReturnsContent()
     {
         // Arrange
         var fileId = Guid.NewGuid();
+        const string fileContent = "test content";
         var file = new File
-            { FileId = fileId, Name = "test.csv", Content = [1, 2, 3, 4, 5], FolderId = Guid.NewGuid() };
+        {
+            FileId = fileId,
+            Name = "test.csv",
+            Content = Encoding.UTF8.GetBytes(fileContent),
+            FolderId = Guid.NewGuid()
+        };
 
-        _mockFileRepository.Setup(repo => repo.GetFileByIdAsync(fileId)).ReturnsAsync(file);
+        _mockFileRepository.Setup(repo => repo.GetFileByIdAsync(It.IsAny<Guid>())).ReturnsAsync(file);
 
         // Act
-        var result = await _fileService.GetFileByIdAsync(fileId);
+        var content = await _fileService.GetFileContentByIdAsync(fileId);
 
         // Assert
-        result.Should().Be(file);
+        content.Should().Be(fileContent);
+    }
+
+    [Fact]
+    public async Task GetFileContentByIdAsync_WithNonExistingFile_ReturnsEmptyString()
+    {
+        // Arrange
+        var fileId = Guid.NewGuid();
+
+        _mockFileRepository.Setup(repo => repo.GetFileByIdAsync(It.IsAny<Guid>())).ReturnsAsync((File)null!);
+
+        // Act
+        var content = await _fileService.GetFileContentByIdAsync(fileId);
+
+        // Assert
+        content.Should().BeEmpty();
     }
 }

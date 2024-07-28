@@ -1,4 +1,4 @@
-﻿namespace FileFolderExplorer.Models;
+﻿namespace FileFolderExplorer.Dtos;
 
 public class UploadFileRequest
 {

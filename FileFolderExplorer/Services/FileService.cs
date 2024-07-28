@@ -1,4 +1,5 @@
-﻿using FileFolderExplorer.Repositories.Interfaces;
+﻿using System.Text;
+using FileFolderExplorer.Repositories.Interfaces;
 using FileFolderExplorer.Services.Interfaces;
 using File = FileFolderExplorer.Models.File;
 
@@ -23,13 +24,14 @@ public class FileService(IFileRepository fileRepository, IFolderRepository folde
             FolderId = folderId
         };
 
-        await fileRepository.AddAsync(file);
+        await fileRepository.UploadFileAsync(file);
         return file;
     }
 
-    public async Task<File?> GetFileByIdAsync(Guid fileId)
+    public async Task<string> GetFileContentByIdAsync(Guid fileId)
     {
-        return await fileRepository.GetFileByIdAsync(fileId);
+        var file = await fileRepository.GetFileByIdAsync(fileId);
+        return file?.Content != null ? Encoding.UTF8.GetString(file.Content) : string.Empty;
     }
 
     private async Task VerifyFolderExists(Guid folderId)

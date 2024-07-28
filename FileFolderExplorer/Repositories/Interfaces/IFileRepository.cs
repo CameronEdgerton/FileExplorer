@@ -4,7 +4,6 @@ namespace FileFolderExplorer.Repositories.Interfaces;
 
 public interface IFileRepository
 {
+    Task UploadFileAsync(File file);
     Task<File?> GetFileByIdAsync(Guid fileId);
-    Task AddAsync(File file);
-    Task<IEnumerable<File>> GetFilesByFolderIdAsync(Guid folderId);
 }

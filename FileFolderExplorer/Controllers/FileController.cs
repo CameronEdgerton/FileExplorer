@@ -1,4 +1,4 @@
-﻿using FileFolderExplorer.Models;
+﻿using FileFolderExplorer.Dtos;
 using FileFolderExplorer.Services.Interfaces;
 using FileFolderExplorer.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -30,13 +30,13 @@ public class FileController(IFileService fileService) : ControllerBase
     }
 
     [HttpGet("{fileId}")]
-    public async Task<ActionResult<File>> GetFileById(string fileId)
+    public async Task<ActionResult> GetFileContentById(string fileId)
     {
         var fileIdGuid = GuidHelper.TryParse(fileId);
         if (fileIdGuid == null) return BadRequest();
 
-        var file = await fileService.GetFileByIdAsync(fileIdGuid.Value);
-        if (file == null) return NotFound();
-        return Ok(file);
+        var content = await fileService.GetFileContentByIdAsync(fileIdGuid.Value);
+        if (string.IsNullOrEmpty(content)) return NotFound();
+        return Ok(content);
     }
 }

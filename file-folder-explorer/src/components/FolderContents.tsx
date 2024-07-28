@@ -1,10 +1,15 @@
-﻿import {Folder} from "../interfaces";
+﻿import {File, Folder} from "../interfaces";
 
 interface FolderContentProps {
-    data: Folder
+    data: Folder,
+    onFileClick: (file: File) => void;
 }
 
-function FolderContents({data}: FolderContentProps) {
+function FolderContents({data, onFileClick}: FolderContentProps) {
+
+    const handleFileClick = (file: File) => {
+        onFileClick(file);
+    };
 
     return (
         <div className=" my-2 flex flex-col">
@@ -18,7 +23,8 @@ function FolderContents({data}: FolderContentProps) {
             </div>
             <div className=" gap-1 flex flex-col">
                 {data.files && data.files.map((item) => (
-                    <span key={item.fileId}>📄 {item.name}</span>
+                    <span className=" cursor-pointer" key={item.fileId}
+                          onClick={() => handleFileClick(item)}>📄 {item.name}</span>
                 ))}
             </div>
         </div>
