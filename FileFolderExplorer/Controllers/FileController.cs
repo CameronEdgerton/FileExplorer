@@ -10,13 +10,16 @@ namespace FileFolderExplorer.Controllers;
 [ApiController]
 public class FileController(IFileService fileService) : ControllerBase
 {
+    /**
+     * @summary Uploads a file to the specified folder
+     */
     [HttpPost("upload")]
     public async Task<IActionResult> UploadFile([FromForm] UploadFileRequest fileRequest)
     {
         var folderIdGuid = GuidHelper.TryParse(fileRequest.FolderId);
         if (folderIdGuid == null || folderIdGuid == Guid.Empty) return BadRequest();
-        File uploadedFile;
 
+        File uploadedFile;
         try
         {
             uploadedFile = await fileService.UploadFileAsync(fileRequest.File, folderIdGuid.Value);
@@ -29,11 +32,14 @@ public class FileController(IFileService fileService) : ControllerBase
         return Ok(uploadedFile);
     }
 
+    /**
+     * @summary Gets the content of a file by its ID
+     */
     [HttpGet("{fileId}")]
     public async Task<ActionResult> GetFileContentById(string fileId)
     {
         var fileIdGuid = GuidHelper.TryParse(fileId);
-        if (fileIdGuid == null) return BadRequest();
+        if (fileIdGuid == null || fileIdGuid == Guid.Empty) return BadRequest();
 
         var content = await fileService.GetFileContentByIdAsync(fileIdGuid.Value);
         if (string.IsNullOrEmpty(content)) return NotFound();

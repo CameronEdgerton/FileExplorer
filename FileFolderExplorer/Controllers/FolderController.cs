@@ -10,6 +10,9 @@ namespace FileFolderExplorer.Controllers;
 [ApiController]
 public class FolderController(IFolderService folderService) : ControllerBase
 {
+    /**
+     * @summary Creates a folder
+     */
     [HttpPost("create")]
     public async Task<IActionResult> CreateFolder([FromBody] CreateFolderRequest request)
     {
@@ -28,13 +31,19 @@ public class FolderController(IFolderService folderService) : ControllerBase
         return Ok(folder);
     }
 
+    /**
+     * @summary Gets the folder tree. This is the root folder and all its subfolders.
+     */
     [HttpGet("tree")]
     public async Task<IActionResult> GetFolderTree()
     {
-        var root = await folderService.GetFolderTreeAsync();
-        return Ok(root);
+        var folderTree = await folderService.GetFolderTreeAsync();
+        return Ok(folderTree);
     }
 
+    /**
+     * @summary Gets a folder by its ID
+     */
     [HttpGet("{folderId}")]
     public async Task<ActionResult> GetFolderById(string folderId)
     {
@@ -44,6 +53,7 @@ public class FolderController(IFolderService folderService) : ControllerBase
         var folder = await folderService.GetFolderByIdAsync(parsedFolderId.Value);
         if (folder == null)
             return NotFound();
+
         return Ok(folder);
     }
 }

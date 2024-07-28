@@ -87,4 +87,50 @@ public class FileControllerUnitTests
         result.Should().NotBeNull();
         result!.Value.Should().Be("Invalid file");
     }
+
+    [Fact]
+    public async Task GetFileContentById_WithValidFileId_ReturnsContent()
+    {
+        // Arrange
+        var fileId = Guid.NewGuid();
+        var content = "Test content";
+        _fileServiceMock
+            .Setup(service => service.GetFileContentByIdAsync(fileId))
+            .ReturnsAsync(content);
+
+        // Act
+        var result = await _fileController.GetFileContentById(fileId.ToString()) as OkObjectResult;
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Value.Should().Be(content);
+    }
+
+    [Theory]
+    [InlineData("invalid-Guid")]
+    [InlineData("")]
+    public async Task GetFileContentById_WithInvalidFileId_ReturnsBadRequest(string fileId)
+    {
+        // Act
+        var result = await _fileController.GetFileContentById(fileId) as BadRequestResult;
+
+        // Assert
+        result.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetFileContentById_WithEmptyContent_ReturnsNotFound()
+    {
+        // Arrange
+        var fileId = Guid.NewGuid();
+        _fileServiceMock
+            .Setup(service => service.GetFileContentByIdAsync(fileId))
+            .ReturnsAsync(string.Empty);
+
+        // Act
+        var result = await _fileController.GetFileContentById(fileId.ToString()) as NotFoundResult;
+
+        // Assert
+        result.Should().NotBeNull();
+    }
 }
