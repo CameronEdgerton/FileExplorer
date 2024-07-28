@@ -41,9 +41,7 @@ const FileFolderExplorer = () => {
     }, [folderAdded]);
 
     useEffect(() => {
-        console.log('Current File at use effect:', currentFile);
         if (currentFile) {
-            console.log('in here');
             fetchFileContent(currentFile);
         }
     }, [currentFile]);
@@ -115,10 +113,8 @@ const FileFolderExplorer = () => {
     };
 
     const handleFileClick = async (file: File) => {
-        console.log('FileId', file.fileId);
         setCurrentFile(file);
         setFileContent(null);
-        console.log('Current File', file);
     }
 
     const fetchFileContent = async (file: File) => {
@@ -126,15 +122,12 @@ const FileFolderExplorer = () => {
             const content = await getFileContent(file.fileId);
 
             if (file.name.endsWith('.csv')) {
-                console.log('CSV file content:', content);
                 setFileContent(content);
             } else if (file.name.endsWith('.geojson')) {
-                console.log('GeoJSON file content:', content);
                 const parsedContent = JSON.parse(content);
                 setFileContent(parsedContent);
             }
         } catch (error: unknown) {
-            console.log('error', error);
             setError('Error fetching file content');
         }
     };
