@@ -57,6 +57,7 @@ function CsvContent({data}: CsvContentProps) {
         });
     }, [data]);
 
+    // bit of a hacky way to handle the case where the data is not valid
     if (!chartData) {
         return <div></div>;
     }
