@@ -125,6 +125,7 @@ I've also added rules such that deleting a folder deletes all files within it (c
 ## System Limitations
 
 There are a few limitations of my implementation.
+- The database schema does not have any specific maximum length limits imposed. In order to keep the database lean, limits on columns like file names and folder names, should be added. 
 - GetFolderTree returns the entire folder tree including files. This could be quite an expensive operation given it is tied to a useEffect which is called relatively frequently in the frontend. To improve this, I could alter the query to use projection to not retrieve the file content (Select only fileId and fileName).
 - By nature of EF Core's ability to retrieve related entities, I encountered circular dependencies when retrieving folders. To resolve this, I had to add a section in the Program.cs which creates a mapping using Id and Value to ensure each folder only appears once in the result:
 ```cs
@@ -136,6 +137,7 @@ This meant the data was not as easily readable in the frontend, so I had to intr
 - Storing the file content as a byte array and then sending it up as a string caused a bit of an issue in the frontend when trying to visualize the data for .csv files. The component libraries I tried out were all expecting .csv formatted strings, so I had to reformat the string to a csv in order to process the data. I would have ideally liked to handle that backend or provided a neater helper to achieve that mapping.
 - Error handling in the frontend is fairly generic and does not give specific details to the actual cause of any backend errors. I would like to improve this, potentially through custom exceptions or an exception handler that makes the exceptions more consumable by the frontend.
 - The endpoints accept strings and try to convert them to Guids. There's a lot of code bloat there. Ideally I think I could have handled the Guid typing in the frontend or created a middleware to do that parsing / validation before it reached the controller.
+- There is no input validation / santisation in the front end. Validation could prevent unnecessary calls to the database (for example enter a single space in the folder name field). Sanitisation would help protect against any malicious SQL injection that is currently possible through the create folder form input. 
 
 ---------------------------------------------------------
 
