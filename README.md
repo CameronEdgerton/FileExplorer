@@ -83,7 +83,7 @@ The frontend should now be running on http://localhost:3000 by default.
 Open your browser and navigate to http://localhost:3000 to view and interact with the FileFolderExplorer application.
 
 Example actions you can do:
--	Display a file directory tree view to navigate within your file and folder system.
+-	Display a file directory tree view to navigate within your file and folder system. The tree is collapsable and expandable.
 -	Display a breadcrumb trail with links to parent or grandparent folders.
 -	Display a list of files and folders for selected folders.
 -	Create folders that can be named.
