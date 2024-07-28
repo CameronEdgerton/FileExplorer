@@ -1,4 +1,5 @@
 using System.Text;
+using FileFolderExplorer.Models;
 using FileFolderExplorer.Repositories.Interfaces;
 using FileFolderExplorer.Services;
 using FluentAssertions;
@@ -35,7 +36,11 @@ public class FileServiceUnitTests
             0, fileContent.Length, fileName, fileName);
 
         _mockFileRepository.Setup(repo => repo.UploadFileAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
-        _mockFolderRepository.Setup(repo => repo.FolderExistsById(It.IsAny<Guid>())).ReturnsAsync(true);
+        _mockFolderRepository.Setup(repo => repo.GetFolderByIdAsync(It.IsAny<Guid>())).ReturnsAsync(new Folder
+        {
+            FolderId = folderId,
+            Name = Guid.NewGuid().ToString()
+        });
 
         // Act
         var file = await _fileService.UploadFileAsync(formFile, folderId);
@@ -63,7 +68,11 @@ public class FileServiceUnitTests
             0, fileContent.Length, fileName, fileName);
 
         _mockFileRepository.Setup(repo => repo.UploadFileAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
-        _mockFolderRepository.Setup(repo => repo.FolderExistsById(It.IsAny<Guid>())).ReturnsAsync(true);
+        _mockFolderRepository.Setup(repo => repo.GetFolderByIdAsync(It.IsAny<Guid>())).ReturnsAsync(new Folder
+        {
+            FolderId = folderId,
+            Name = Guid.NewGuid().ToString()
+        });
 
         // Act
         var act = async () => { await _fileService.UploadFileAsync(formFile, folderId); };
@@ -85,8 +94,7 @@ public class FileServiceUnitTests
             0, fileContent.Length, fileName, fileName);
 
         _mockFileRepository.Setup(repo => repo.UploadFileAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
-        // Return false to simulate a non-existing folder
-        _mockFolderRepository.Setup(repo => repo.FolderExistsById(It.IsAny<Guid>())).ReturnsAsync(false);
+        _mockFolderRepository.Setup(repo => repo.GetFolderByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Folder)null!);
 
         // Act
         var act = async () => { await _fileService.UploadFileAsync(formFile, folderId); };
@@ -110,6 +118,40 @@ public class FileServiceUnitTests
 
         // Assert
         await act.Should().ThrowAsync<ArgumentException>("File is empty");
+        _mockFileRepository.Verify(repo => repo.UploadFileAsync(It.IsAny<File>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UploadFileAsync_WithExistingFile_ThrowsError()
+    {
+        // Arrange
+        var folderId = Guid.NewGuid();
+        const string fileName = "test.csv";
+        const string fileContent = "test content";
+        var formFile = new FormFile(
+            new MemoryStream(Encoding.UTF8.GetBytes(fileContent)),
+            0, fileContent.Length, fileName, fileName);
+
+        _mockFileRepository.Setup(repo => repo.UploadFileAsync(It.IsAny<File>())).Returns(Task.CompletedTask);
+        _mockFolderRepository.Setup(repo => repo.GetFolderByIdAsync(It.IsAny<Guid>())).ReturnsAsync(new Folder
+        {
+            FolderId = folderId,
+            Name = Guid.NewGuid().ToString(),
+            Files = new List<File>
+            {
+                new()
+                {
+                    Name = fileName,
+                    Content = [1, 2, 3]
+                }
+            }
+        });
+
+        // Act
+        var act = async () => { await _fileService.UploadFileAsync(formFile, folderId); };
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentException>("File already exists in folder");
         _mockFileRepository.Verify(repo => repo.UploadFileAsync(It.IsAny<File>()), Times.Never);
     }
 

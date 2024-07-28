@@ -22,11 +22,6 @@ public class FolderRepository(FileFolderExplorerContext dbContext) : IFolderRepo
             .ToListAsync();
     }
 
-    public async Task<bool> FolderExistsById(Guid folderId)
-    {
-        return await dbContext.Folders.AnyAsync(f => f.FolderId == folderId);
-    }
-
     public async Task<bool> AnyFolderExists()
     {
         return await dbContext.Folders.AnyAsync();

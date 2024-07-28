@@ -22,25 +22,29 @@ public class FolderServiceUnitTests
     {
         // Arrange
         const string folderName = "Test Folder";
-        var parentId = Guid.NewGuid();
-
-        _mockFolderRepository
-            .Setup(repo => repo.FolderExistsById(It.IsAny<Guid>()))
-            .ReturnsAsync(true);
-
-        _mockFolderRepository.Setup(repo => repo.GetFolderByIdAsync(It.IsAny<Guid>())).ReturnsAsync(new Folder
+        var folder = new Folder
         {
+            FolderId = Guid.NewGuid(),
             Name = folderName,
-            ParentFolderId = parentId
-        });
+            ParentFolderId = Guid.NewGuid()
+        };
+
+        _mockFolderRepository.Setup(repo => repo.GetFolderByIdAsync(folder.ParentFolderId.Value)).ReturnsAsync(
+            new Folder
+            {
+                Name = "parent folder",
+                ParentFolderId = Guid.NewGuid()
+            });
+
+        _mockFolderRepository.Setup(repo => repo.GetFolderByIdAsync(It.IsAny<Guid>())).ReturnsAsync(folder);
 
         // Act
-        var folder = await _folderService.CreateFolderAsync(folderName, parentId);
+        var resultFolder = await _folderService.CreateFolderAsync(folderName, folder.ParentFolderId);
 
         // Assert
-        folder.Should().NotBeNull();
-        folder!.Name.Should().Be(folderName);
-        folder.ParentFolderId.Should().Be(parentId);
+        resultFolder.Should().NotBeNull();
+        resultFolder!.Name.Should().Be(folderName);
+        resultFolder.ParentFolderId.Should().Be(folder.ParentFolderId);
         _mockFolderRepository.Verify(repo => repo.AddAsync(It.IsAny<Folder>()), Times.Once);
     }
 
@@ -65,17 +69,49 @@ public class FolderServiceUnitTests
     {
         // Arrange
         const string folderName = "Test Folder";
-        var parentId = Guid.NewGuid();
+        var folder = new Folder
+        {
+            FolderId = Guid.NewGuid(),
+            Name = folderName,
+            ParentFolderId = Guid.NewGuid()
+        };
 
-        _mockFolderRepository
-            .Setup(repo => repo.FolderExistsById(It.IsAny<Guid>()))
-            .ReturnsAsync(false);
+        _mockFolderRepository.Setup(repo => repo.GetFolderByIdAsync(folder.ParentFolderId.Value))
+            .ReturnsAsync((Folder)null!);
 
         // Act
-        var act = async () => { await _folderService.CreateFolderAsync(folderName, parentId); };
+        var act = async () => { await _folderService.CreateFolderAsync(folderName, folder.ParentFolderId); };
 
         // Assert
         await act.Should().ThrowAsync<Exception>("Parent folder not found");
+        _mockFolderRepository.Verify(repo => repo.AddAsync(It.IsAny<Folder>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateFolderAsync_WithDuplicateName_ThrowsError()
+    {
+        // Arrange
+        const string folderName = "Test Folder";
+        var folder = new Folder
+        {
+            FolderId = Guid.NewGuid(),
+            Name = folderName,
+            ParentFolderId = Guid.NewGuid()
+        };
+
+        _mockFolderRepository.Setup(repo => repo.GetFolderByIdAsync(folder.ParentFolderId.Value)).ReturnsAsync(
+            new Folder
+            {
+                Name = "parent folder",
+                ParentFolderId = Guid.NewGuid(),
+                Subfolders = new List<Folder> { new() { Name = folderName } }
+            });
+
+        // Act
+        var act = async () => { await _folderService.CreateFolderAsync(folderName, folder.ParentFolderId); };
+
+        // Assert
+        await act.Should().ThrowAsync<Exception>("Folder already exists in parent folder");
         _mockFolderRepository.Verify(repo => repo.AddAsync(It.IsAny<Folder>()), Times.Never);
     }
 

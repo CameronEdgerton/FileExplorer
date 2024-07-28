@@ -17,8 +17,8 @@ public class FolderService(IFolderRepository folderRepository) : IFolderService
             ParentFolderId = parentFolderId
         };
 
-        var parentFolderExists = await ParentFolderExists(parentFolderId);
-        if (!parentFolderExists) return await CreateRootFolder(folder);
+        var validParentFolderExists = await ValidParentFolderExists(parentFolderId, folderName);
+        if (!validParentFolderExists) return await CreateRootFolder(folder);
 
         await folderRepository.AddAsync(folder);
 
@@ -37,11 +37,18 @@ public class FolderService(IFolderRepository folderRepository) : IFolderService
         return await folderRepository.GetFolderByIdAsync(folderId);
     }
 
-    private async Task<bool> ParentFolderExists(Guid? parentFolderId)
+    // Validate whether the parent folder exists. It is valid if the parent folder exists and the folder name is unique
+    // within the parent folder
+    private async Task<bool> ValidParentFolderExists(Guid? parentFolderId, string folderName)
     {
         if (parentFolderId == null) return false;
-        var parentExists = await folderRepository.FolderExistsById(parentFolderId.Value);
-        if (!parentExists) throw new ArgumentException("Parent folder not found");
+
+        var parentFolder = await folderRepository.GetFolderByIdAsync(parentFolderId.Value);
+        if (parentFolder == null) throw new ArgumentException("Parent folder not found");
+
+        if (parentFolder.Subfolders.Any(x => x.Name == folderName))
+            throw new ArgumentException("Folder already exists in parent folder");
+
         return true;
     }
 

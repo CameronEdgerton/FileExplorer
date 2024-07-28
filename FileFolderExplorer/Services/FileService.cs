@@ -10,7 +10,7 @@ public class FileService(IFileRepository fileRepository, IFolderRepository folde
     public async Task<File> UploadFileAsync(IFormFile formFile, Guid folderId)
     {
         ValidateFormFile(formFile);
-        await VerifyFolderExists(folderId);
+        await VerifyFolderCanAcceptFile(folderId, formFile.FileName);
 
         using var memoryStream = new MemoryStream();
         await formFile.CopyToAsync(memoryStream);
@@ -34,11 +34,13 @@ public class FileService(IFileRepository fileRepository, IFolderRepository folde
         return file?.Content != null ? Encoding.UTF8.GetString(file.Content) : string.Empty;
     }
 
-    private async Task VerifyFolderExists(Guid folderId)
+    private async Task VerifyFolderCanAcceptFile(Guid folderId, string fileName)
     {
-        var folderExists = await folderRepository.FolderExistsById(folderId);
-        if (!folderExists)
+        var folder = await folderRepository.GetFolderByIdAsync(folderId);
+        if (folder == null)
             throw new ArgumentException("Folder not found");
+        if (folder.Files.Any(x => x.Name == fileName))
+            throw new ArgumentException("File already exists in folder");
     }
 
     private static void ValidateFormFile(IFormFile formFile)
