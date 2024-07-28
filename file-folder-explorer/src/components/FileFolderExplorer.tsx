@@ -66,11 +66,11 @@ const FileFolderExplorer = () => {
             try {
                 await createFolder(newFolderName, currentFolderId);
                 setError(null);
+                setNewFolderName('');
+                setFolderAdded(!folderAdded);
             } catch (error: unknown) {
                 setError('Error creating folder');
             }
-            setNewFolderName('');
-            setFolderAdded(!folderAdded);
         }
     };
 
@@ -79,8 +79,7 @@ const FileFolderExplorer = () => {
             setError('You must select a folder to upload the file to');
             return;
         }
-        setError(null);
-
+        setError(null)
         if (event?.target?.files?.[0] && currentFolderId) {
             try {
                 await uploadFile(event.target.files[0], currentFolderId);
